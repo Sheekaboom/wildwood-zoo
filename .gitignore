@@ -1,0 +1,5 @@
+/target
+/dist/wildwood.wasm
+test/*.png
+__pycache__/
+.DS_Store

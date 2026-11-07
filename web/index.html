@@ -1,0 +1,1040 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Wildwood Zoo</title>
+<style>
+:root{
+  --leaf1:#4f8a35; --leaf2:#2f5a1f; --leaf3:#1d3b13; --gold:#d8b45a; --gold2:#8a6a22;
+  --cream:#fbf3d2; --wood1:#8a5a2e; --wood2:#5b3816; --ink:#1b250f;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;background:#24391a;font-family:"Trebuchet MS","Verdana",sans-serif;color:var(--cream);-webkit-user-select:none;user-select:none;touch-action:none}
+#game{position:fixed;inset:0;width:100%;height:100%;display:block;cursor:crosshair}
+.panel{background:linear-gradient(180deg,var(--leaf1),var(--leaf2) 60%,var(--leaf3));border:2px solid var(--gold);box-shadow:inset 0 1px 0 rgba(255,255,255,.35),inset 0 -2px 0 rgba(0,0,0,.35),0 3px 10px rgba(0,0,0,.5);border-radius:10px}
+.btn{font:inherit;font-size:13px;font-weight:bold;color:var(--cream);text-shadow:0 1px 0 #000;background:linear-gradient(180deg,#77b04d,#3f7326 55%,#2d5419);border:2px solid var(--gold2);border-top-color:#e9cf85;border-left-color:#e9cf85;border-radius:8px;padding:6px 10px;cursor:pointer;white-space:nowrap}
+.btn:active,.btn.on{background:linear-gradient(180deg,#e6c86a,#b88f2f 60%,#7a5b18);border-color:#5a4210;border-bottom-color:#f2dc98;border-right-color:#f2dc98;color:#fff}
+.btn:disabled{opacity:.45}
+.btn.red{background:linear-gradient(180deg,#d6694b,#9b3418 60%,#6a210c)}
+#top{position:fixed;left:6px;right:6px;top:calc(6px + env(safe-area-inset-top));display:flex;align-items:center;gap:8px;padding:5px 8px;z-index:5;flex-wrap:wrap}
+#logo{font-family:Georgia,serif;font-weight:bold;font-size:18px;color:#ffe9a0;text-shadow:0 2px 0 #3a2a08,0 0 6px rgba(0,0,0,.6);letter-spacing:.5px;display:flex;align-items:center;gap:6px}
+.stat{background:rgba(0,0,0,.28);border:1px solid rgba(255,230,150,.35);border-radius:7px;padding:3px 8px;font-size:13px;font-weight:bold;display:flex;align-items:center;gap:5px;cursor:pointer}
+#stars{position:relative;display:inline-block;font-size:15px;letter-spacing:1px;color:rgba(0,0,0,.35);text-shadow:none}#stars .f{position:absolute;left:0;top:0;overflow:hidden;white-space:nowrap;color:#ffd54a;text-shadow:0 1px 0 #6a4a00}
+.spacer{flex:1}
+#speed .btn{padding:4px 8px;font-size:12px}
+#bottom{position:fixed;left:6px;right:6px;bottom:calc(6px + env(safe-area-inset-bottom));z-index:5;display:flex;flex-direction:column;gap:6px;pointer-events:none}
+#tray{pointer-events:auto;padding:8px;display:none;max-height:42vh;overflow:auto}
+#tray.open{display:block}
+#trayTitle{font-weight:bold;color:#ffe9a0;font-size:14px;margin-bottom:6px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+#trayItems{display:flex;align-items:flex-start;gap:6px;overflow-x:auto;padding-bottom:4px;flex-wrap:nowrap}
+.item{flex:0 0 auto;width:96px;background:rgba(0,0,0,.25);border:2px solid rgba(216,180,90,.5);border-radius:8px;padding:4px;text-align:center;cursor:pointer;font-size:11px;line-height:1.2}
+.item canvas{width:86px;height:58px;display:block;margin:0 auto 2px;background:radial-gradient(ellipse at 50% 70%,#7fb35a,#3d6e27);border-radius:5px}
+.item.sel{border-color:#ffe08a;background:rgba(255,220,120,.25);box-shadow:0 0 8px #ffd96b}
+.item .c{color:#ffe08a;font-weight:bold}
+.item .b{color:#cfe6b5;font-size:10px}
+#tools{pointer-events:auto;display:flex;gap:5px;padding:6px;overflow-x:auto}
+#tools .btn{display:flex;flex-direction:column;align-items:center;gap:1px;font-size:10.5px;padding:4px 7px;min-width:58px}
+#tools .btn .i{font-size:19px;line-height:1.1}
+#info{position:fixed;right:8px;top:70px;width:300px;max-width:calc(100vw - 16px);z-index:6;padding:10px;display:none;max-height:calc(100vh - 230px);overflow:auto}
+#info.open{display:block}
+#info h3{margin:0 0 4px;font-family:Georgia,serif;color:#ffe9a0;font-size:17px}
+#info .sub{font-size:12px;color:#d7ecc2;margin-bottom:6px}
+.bar{display:flex;align-items:center;gap:6px;font-size:11.5px;margin:3px 0}
+.bar span:first-child{width:74px;flex:none}
+.bar .track{flex:1;height:10px;background:rgba(0,0,0,.4);border-radius:5px;overflow:hidden;border:1px solid rgba(0,0,0,.4)}
+.bar .fill{height:100%;border-radius:5px}
+.tips{margin:6px 0;padding:6px 8px;background:rgba(0,0,0,.25);border-radius:6px;font-size:12px}
+.tips div{margin:2px 0}
+.thought{font-style:italic;font-size:12px;margin:3px 0;padding:4px 8px;background:#fffbe6;color:#3a2f10;border-radius:10px;position:relative}
+.row{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+#close{position:absolute;right:8px;top:6px;padding:2px 8px}
+#toasts{position:fixed;left:50%;transform:translateX(-50%);top:78px;z-index:7;display:flex;flex-direction:column;gap:5px;align-items:center;pointer-events:none;width:min(560px,94vw)}
+.toast{background:rgba(25,40,15,.92);border:2px solid var(--gold);border-radius:9px;padding:6px 12px;font-size:13px;box-shadow:0 3px 8px rgba(0,0,0,.5);animation:pop .25s ease-out;text-align:center}
+.toast.alert{background:rgba(120,25,10,.95);border-color:#ffb08a}
+.toast.good{background:rgba(110,80,10,.95);border-color:#ffe08a}
+@keyframes pop{from{transform:scale(.8);opacity:0}to{transform:scale(1);opacity:1}}
+#cursorTip{position:fixed;z-index:8;pointer-events:none;background:rgba(15,25,8,.9);border:1px solid var(--gold);border-radius:6px;padding:3px 7px;font-size:12px;display:none;white-space:nowrap}
+#modal{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:20;display:none;align-items:center;justify-content:center}
+#modal.open{display:flex}
+#modalBox{width:min(520px,94vw);max-height:86vh;overflow:auto;padding:16px}
+#modalBox h2{font-family:Georgia,serif;color:#ffe9a0;margin:0 0 8px}
+table.led{width:100%;border-collapse:collapse;font-size:13px}
+table.led td{padding:3px 4px;border-bottom:1px solid rgba(255,255,255,.12)}
+table.led td.n{text-align:right;font-family:monospace;font-size:13px}
+.goal{display:flex;gap:8px;align-items:center;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.1);font-size:13px}
+.goal .ck{width:20px;height:20px;border-radius:50%;border:2px solid var(--gold);display:flex;align-items:center;justify-content:center;font-size:12px;flex:none}
+.goal.done .ck{background:#e6c86a;color:#3a2a00}
+.goal.done{color:#ffe9a0}
+#walkWrap{position:fixed;inset:0;z-index:15;background:#000;display:none}
+#walkWrap.open{display:block}
+#walkCanvas{position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated;image-rendering:crisp-edges}
+#walkHud{position:absolute;left:8px;top:calc(8px + env(safe-area-inset-top));right:8px;display:flex;gap:8px;align-items:center;padding:6px 10px}
+#dpad{position:absolute;left:14px;bottom:calc(18px + env(safe-area-inset-bottom));display:grid;grid-template-columns:repeat(3,58px);grid-template-rows:repeat(2,58px);gap:6px}
+#dpad .btn{font-size:22px;padding:0;opacity:.85}
+#walkTip{font-size:12px;color:#d7ecc2}
+.kv{display:flex;justify-content:space-between;font-size:13px;padding:2px 0}
+input[type=range]{width:100%;accent-color:#e6c86a}
+.chip{display:inline-block;padding:1px 7px;border-radius:10px;background:rgba(0,0,0,.3);font-size:11px;margin:1px}
+#term{position:fixed;left:50%;transform:translateX(-50%);top:70px;width:min(760px,96vw);height:min(440px,62vh);z-index:25;display:none;flex-direction:column;background:#050a04;border:2px solid #6fbf4a;border-radius:6px;box-shadow:0 0 0 2px #000,0 0 24px rgba(80,255,80,.25),0 8px 30px rgba(0,0,0,.7);font-family:"Lucida Console","Courier New",monospace}
+#term.open{display:flex}
+#termBar{display:flex;align-items:center;gap:8px;padding:4px 8px;background:linear-gradient(180deg,#2c5a1c,#163010);color:#d9ffc4;font-size:12px;font-weight:bold;border-bottom:1px solid #6fbf4a}
+#termOut{flex:1;overflow:auto;padding:8px 10px;color:#7dff6a;font-size:12.5px;line-height:1.35;white-space:pre-wrap;text-shadow:0 0 4px rgba(90,255,90,.45);background:repeating-linear-gradient(0deg,rgba(0,0,0,.18) 0 1px,transparent 1px 3px)}
+#termOut .u{color:#e8ffd8}
+#termOut .w{color:#ffd76a}
+#termLine{display:flex;align-items:center;gap:6px;padding:6px 10px;border-top:1px solid #234a18;color:#7dff6a}
+#termIn{flex:1;background:transparent;border:none;outline:none;color:#e8ffd8;font:inherit;font-size:16px;caret-color:#7dff6a}
+#termBtn{font-family:"Lucida Console",monospace;padding:4px 7px}
+#loading{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:30;background:#24391a;font-family:Georgia,serif;font-size:22px;color:#ffe9a0}
+@media (max-width:640px){
+  #logo{display:none}
+  #speed{gap:2px!important}
+  #speed .btn{padding:3px 5px;font-size:10px;letter-spacing:-1px}
+  #termBtn,#menuBtn{padding:3px 6px;font-size:11px}
+  #stDate{font-size:10.5px;padding:2px 5px}
+  .spacer{display:none}
+  #top{gap:5px;padding:4px 6px}
+  .stat{font-size:12px;padding:2px 6px}
+  #info{top:auto;bottom:150px;right:6px;left:6px;width:auto;max-height:46vh}
+  #toasts{top:118px}
+  #term{top:auto;bottom:calc(8px + env(safe-area-inset-bottom));height:52vh}
+  #trayTitle{font-size:12px}
+  .item{width:84px}
+  .item canvas{width:76px;height:51px}
+  #tools .btn{min-width:52px;font-size:9.5px}
+}
+</style>
+</head>
+<body>
+<div id="loading">Opening the gates…</div>
+<canvas id="game"></canvas>
+
+<div id="top" class="panel">
+  <div id="logo">🦒 <span class="t">Wildwood Zoo</span></div>
+  <div class="stat" id="stCash" title="Finances">💰 <span id="cash">$0</span></div>
+  <div class="stat" id="stFame" title="Zoo fame"><span id="stars">★★★★★<span class="f" id="starsF">★★★★★</span></span></div>
+  <div class="stat" id="stGuests" title="Guests">🧑‍🤝‍🧑 <span id="guests">0</span></div>
+  <div class="stat" id="stAnimals" title="Animals">🐾 <span id="animals">0</span></div>
+  <div class="stat" id="stDate">📅 <span id="date"></span></div>
+  <div class="spacer"></div>
+  <div id="speed" style="display:flex;gap:3px">
+    <button class="btn" data-s="0" title="Pause">❚❚</button>
+    <button class="btn on" data-s="1" title="Normal">▶</button>
+    <button class="btn" data-s="2" title="Fast">▶▶</button>
+    <button class="btn" data-s="4" title="Fastest">▶▶▶</button>
+  </div>
+  <button class="btn" id="termBtn" title="Terminal (~)">&gt;_</button>
+  <button class="btn" id="menuBtn" title="Menu">☰</button>
+</div>
+
+<div id="info" class="panel"><button class="btn" id="close">✕</button><div id="infoBody"></div></div>
+<div id="toasts"></div>
+<div id="cursorTip"></div>
+
+<div id="bottom">
+  <div id="tray" class="panel"><div id="trayTitle"></div><div id="trayItems"></div></div>
+  <div id="tools" class="panel"></div>
+</div>
+
+<div id="walkWrap">
+  <canvas id="walkCanvas"></canvas>
+  <div id="walkHud" class="panel">
+    <b style="color:#ffe9a0">🚶 Zoo Walk</b>
+    <span id="walkTip">WASD / arrows to walk · hold Shift to run · drag to look around</span>
+    <div class="spacer"></div>
+    <button class="btn red" id="walkExit">Exit</button>
+  </div>
+  <div id="dpad">
+    <span></span><button class="btn" data-k="f">▲</button><span></span>
+    <button class="btn" data-k="l">⟲</button><button class="btn" data-k="b">▼</button><button class="btn" data-k="r">⟳</button>
+  </div>
+</div>
+
+<div id="term"><div id="termBar">ZOO TERMINAL <span style="font-weight:normal;opacity:.7">type "help" or "cheats"</span><div class="spacer"></div><button class="btn" style="padding:1px 8px" id="termClose">✕</button></div><div id="termOut"></div><div id="termLine">&gt;<input id="termIn" autocomplete="off" autocapitalize="off" spellcheck="false"></div></div>
+<div id="modal"><div id="modalBox" class="panel"></div></div>
+
+<script>
+"use strict";
+const WASM_B64 = "__WASM_B64__";
+
+// ===================== WASM bootstrap =====================
+let X = null, W = 56, H = 56, DEFS = null;
+const dec = new TextDecoder();
+function outStr(n){ return dec.decode(new Uint8Array(X.memory.buffer, X.out_ptr(), n)); }
+function J(n){ return JSON.parse(outStr(n)); }
+const enc = new TextEncoder();
+function putStr(s){ const b = enc.encode(s); const p = X.alloc_in(b.length); new Uint8Array(X.memory.buffer, p, b.length).set(b); }
+let T, O, FH, FV, DUNG, LIT, REG;
+function views(){
+  const b = X.memory.buffer;
+  T = new Uint8Array(b, X.terrain_ptr(), W*H);
+  O = new Uint8Array(b, X.obj_ptr(), W*H);
+  FH = new Uint8Array(b, X.fh_ptr(), W*(H+1));
+  FV = new Uint8Array(b, X.fv_ptr(), (W+1)*H);
+  DUNG = new Uint8Array(b, X.dung_ptr(), W*H);
+  LIT = new Uint8Array(b, X.litter_ptr(), W*H);
+  REG = new Uint16Array(b, X.region_ptr(), W*H);
+}
+async function boot(){
+  const bin = Uint8Array.from(atob(WASM_B64), c => c.charCodeAt(0));
+  const { instance } = await WebAssembly.instantiate(bin, {});
+  X = instance.exports;
+  X.init((Math.random()*1e9)|0);
+  W = X.map_w(); H = X.map_h();
+  buildOrder();
+  DEFS = J(X.defs());
+  buildTools();
+  let loaded = false;
+  try { const s = localStorage.getItem("wildwood_save"); if (s && new URLSearchParams(location.search).get("new")===null) loaded = loadFrom(s, true); } catch(e) {}
+  { const st0 = J(X.stats()); own = st0.own; homeView(); }
+  document.getElementById("loading").remove();
+  resize();
+  requestAnimationFrame(frame);
+  if (!loaded) setTimeout(()=>showHelp(true), 300);
+}
+
+// ===================== View / projection =====================
+const cv = document.getElementById("game"); let ctx = cv.getContext("2d");
+let cw = 0, ch = 0, dpr = 1;
+const view = { cx: 64, cy: 116, zoom: 1, rot: 0 };
+let own = [0, 0, 128, 128];
+function homeView(){ view.cx = (own[0]+own[2])/2; view.cy = own[3]-12; }
+function resize(){
+  dpr = Math.min(window.devicePixelRatio || 1, 2);
+  cw = innerWidth; ch = innerHeight;
+  cv.width = cw*dpr; cv.height = ch*dpr;
+  if (innerWidth < 640 && !resize.done) { view.zoom = 0.8; }
+  resize.done = true;
+}
+addEventListener("resize", resize);
+function rotP(x,y){ switch(view.rot){case 0:return [x,y];case 1:return [W-y,x];case 2:return [W-x,H-y];default:return [y,H-x];} }
+function unrot(rx,ry){ switch(view.rot){case 0:return [rx,ry];case 1:return [ry,W-rx];case 2:return [W-rx,H-ry];default:return [H-ry,rx];} }
+function hw(){ return 32*view.zoom } function hh(){ return 16*view.zoom }
+function proj(x,y){
+  const r = rotP(x,y), c = rotP(view.cx,view.cy);
+  return [ (r[0]-r[1]-(c[0]-c[1]))*hw() + cw/2, (r[0]+r[1]-(c[0]+c[1]))*hh() + ch/2 ];
+}
+function unproj(sx,sy){
+  const c = rotP(view.cx,view.cy);
+  const a = (sx-cw/2)/hw() + (c[0]-c[1]), b = (sy-ch/2)/hh() + (c[0]+c[1]);
+  return unrot((a+b)/2, (b-a)/2);
+}
+const faceMul = () => [1,-1,-1,1][view.rot];
+let tileOrder = [];
+function buildOrder(){
+  tileOrder = [];
+  for (let i=0;i<W*H;i++) tileOrder.push(i);
+  const key = i => { const r = rotP(i%W+0.5, (i/W|0)+0.5); return (r[0]+r[1])*1000 + r[0]; };
+  tileOrder.sort((a,b)=>key(a)-key(b));
+}
+function depth(x,y){ const r = rotP(x,y); return r[0]+r[1]; }
+
+// ===================== Helpers =====================
+function hash(n){ n = Math.imul(n ^ 0x9e3779b9, 0x85ebca6b); n ^= n>>>13; n = Math.imul(n, 0xc2b2ae35); n ^= n>>>16; return (n>>>0)/4294967296; }
+function shade(c,k){ return `rgb(${Math.min(255,c[0]*k)|0},${Math.min(255,c[1]*k)|0},${Math.min(255,c[2]*k)|0})`; }
+function ell(x,y,rx,ry,fill){ ctx.beginPath(); ctx.ellipse(x,y,Math.max(.1,rx),Math.max(.1,ry),0,0,Math.PI*2); ctx.fillStyle=fill; ctx.fill(); }
+function poly(pts,fill,stroke){ ctx.beginPath(); ctx.moveTo(pts[0],pts[1]); for(let i=2;i<pts.length;i+=2) ctx.lineTo(pts[i],pts[i+1]); ctx.closePath(); if(fill){ctx.fillStyle=fill;ctx.fill();} if(stroke){ctx.strokeStyle=stroke;ctx.stroke();} }
+function money(v){ return (v<0?"-$":"$") + Math.abs(Math.round(v)).toLocaleString(); }
+
+// ===================== Terrain rendering =====================
+const TCOL = [[96,160,66],[196,178,100],[150,114,76],[228,208,150],[236,242,250],[142,138,132],[64,124,190],[208,198,180],[70,92,46]];
+let time = 0;
+function drawTile(i, sx, sy){
+  const t = T[i], a = hw(), b = hh();
+  const v = 0.94 + hash(i)*0.1;
+  let col = TCOL[t];
+  const pad = 0.6;
+  ctx.beginPath(); ctx.moveTo(sx, sy-b-pad); ctx.lineTo(sx+a+pad, sy); ctx.lineTo(sx, sy+b+pad); ctx.lineTo(sx-a-pad, sy); ctx.closePath();
+  if (t === 6) {
+    const w = Math.sin(time*1.6 + (i%W)*0.7 + (i/W|0)*0.5)*8;
+    ctx.fillStyle = `rgb(${60+w|0},${122+w|0},${190+w|0})`; ctx.fill();
+    if (view.zoom > 0.6) { ctx.strokeStyle = "rgba(255,255,255,.35)"; ctx.lineWidth = 1; ctx.beginPath(); const o = Math.sin(time+i)*a*0.3; ctx.moveTo(sx-a*0.35+o, sy); ctx.lineTo(sx-a*0.05+o, sy-b*0.15); ctx.stroke(); }
+    return;
+  }
+  ctx.fillStyle = shade(col, v); ctx.fill();
+  if (view.zoom < 0.55) return;
+  const h1 = hash(i*7+1), h2 = hash(i*13+5);
+  ctx.lineWidth = Math.max(1, view.zoom);
+  switch (t) {
+    case 0: ctx.strokeStyle = "rgba(40,100,30,.45)"; ctx.beginPath(); for(let k=0;k<3;k++){const px=sx+(hash(i*3+k)-.5)*a*1.1, py=sy+(hash(i*5+k)-.5)*b*1.1; ctx.moveTo(px,py); ctx.lineTo(px+1,py-3*view.zoom);} ctx.stroke(); break;
+    case 1: ctx.strokeStyle = "rgba(140,110,40,.6)"; ctx.beginPath(); for(let k=0;k<5;k++){const px=sx+(hash(i*3+k)-.5)*a*1.2, py=sy+(hash(i*5+k)-.5)*b*1.2; ctx.moveTo(px,py); ctx.lineTo(px-2*view.zoom,py-5*view.zoom); ctx.moveTo(px,py); ctx.lineTo(px+2*view.zoom,py-5*view.zoom);} ctx.stroke(); break;
+    case 2: ell(sx+(h1-.5)*a, sy+(h2-.5)*b, 3*view.zoom, 1.5*view.zoom, "rgba(100,70,40,.4)"); break;
+    case 3: ell(sx+(h1-.5)*a, sy+(h2-.5)*b*0.8, 6*view.zoom, 1.2*view.zoom, "rgba(190,160,100,.4)"); break;
+    case 4: ell(sx+(h1-.5)*a, sy+(h2-.5)*b, 2*view.zoom, 1*view.zoom, "rgba(170,200,230,.55)"); break;
+    case 5: ctx.strokeStyle = "rgba(80,76,70,.6)"; ctx.beginPath(); ctx.moveTo(sx-a*0.4+h1*a*.3, sy-b*0.1); ctx.lineTo(sx, sy+b*0.2*h2); ctx.lineTo(sx+a*0.3, sy-b*0.2); ctx.stroke(); break;
+    case 7: { ctx.strokeStyle = "rgba(120,110,95,.5)"; ctx.beginPath(); ctx.moveTo(sx-a,sy); ctx.lineTo(sx,sy-b); ctx.lineTo(sx+a,sy); ctx.stroke(); break; }
+    case 8: for(let k=0;k<3;k++) ell(sx+(hash(i*3+k)-.5)*a*1.1, sy+(hash(i*9+k)-.5)*b, 3*view.zoom, 1.4*view.zoom, k%2?"rgba(110,80,40,.5)":"rgba(40,90,30,.5)"); break;
+  }
+}
+
+// ===================== Fences =====================
+const FENCE_H = [0, 13, 15, 19];
+function drawEdge(x0,y0,x1,y1,val){
+  const p0 = proj(x0,y0), p1 = proj(x1,y1), z = view.zoom;
+  const kind = val & 3, gate = (val & 4) !== 0, h = FENCE_H[kind]*z;
+  ctx.lineCap = "round";
+  if (kind === 3) {
+    const dx = p1[0]-p0[0];
+    poly([p0[0],p0[1],p1[0],p1[1],p1[0],p1[1]-h,p0[0],p0[1]-h], gate?"#8b6a3e": (dx*(p1[1]-p0[1])>0 ? "#b9b4a8" : "#cfcabd"), "rgba(60,55,50,.6)");
+    poly([p0[0],p0[1]-h,p1[0],p1[1]-h,p1[0],p1[1]-h-2*z,p0[0],p0[1]-h-2*z], "#e2ddd0");
+    if (gate) { ctx.strokeStyle="#5a3d1a"; ctx.lineWidth=1.5*z; ctx.beginPath(); ctx.moveTo(p0[0]*.8+p1[0]*.2,p0[1]*.8+p1[1]*.2-h); ctx.lineTo(p0[0]*.2+p1[0]*.8,p0[1]*.2+p1[1]*.8); ctx.stroke(); }
+    return;
+  }
+  if (kind === 2) {
+    poly([p0[0],p0[1],p1[0],p1[1],p1[0],p1[1]-h,p0[0],p0[1]-h], gate?"rgba(120,85,45,.55)":"rgba(185,190,198,.32)");
+    ctx.strokeStyle = gate?"#6b4a22":"rgba(220,225,232,.75)"; ctx.lineWidth = Math.max(.7, .8*z); ctx.beginPath();
+    for (let k=1;k<4;k++){ const f=k/4; ctx.moveTo(p0[0]+(p1[0]-p0[0])*f, p0[1]+(p1[1]-p0[1])*f); ctx.lineTo(p0[0]+(p1[0]-p0[0])*(f-.25), p0[1]+(p1[1]-p0[1])*(f-.25)-h); ctx.moveTo(p0[0]+(p1[0]-p0[0])*(f-.25), p0[1]+(p1[1]-p0[1])*(f-.25)); ctx.lineTo(p0[0]+(p1[0]-p0[0])*f, p0[1]+(p1[1]-p0[1])*f-h); }
+    ctx.stroke();
+    ctx.strokeStyle = "#7d828a"; ctx.lineWidth = 1.6*z; ctx.beginPath(); ctx.moveTo(p0[0],p0[1]-h); ctx.lineTo(p1[0],p1[1]-h); ctx.stroke();
+    ctx.lineWidth = 2*z; ctx.beginPath(); ctx.moveTo(p0[0],p0[1]); ctx.lineTo(p0[0],p0[1]-h-1); ctx.moveTo(p1[0],p1[1]); ctx.lineTo(p1[0],p1[1]-h-1); ctx.stroke();
+    return;
+  }
+  // wood
+  ctx.strokeStyle = gate ? "#d9a441" : "#8a5a2c"; ctx.lineWidth = 2.2*z; ctx.beginPath();
+  for (const f of [0.25, 0.6, 0.92]) { ctx.moveTo(p0[0], p0[1]-h*f); ctx.lineTo(p1[0], p1[1]-h*f); }
+  ctx.stroke();
+  if (gate) { ctx.beginPath(); ctx.moveTo(p0[0],p0[1]-h*.25); ctx.lineTo(p1[0],p1[1]-h*.92); ctx.stroke(); }
+  ctx.strokeStyle = "#5e3a18"; ctx.lineWidth = 3*z; ctx.beginPath(); ctx.moveTo(p0[0],p0[1]); ctx.lineTo(p0[0],p0[1]-h-2*z); ctx.moveTo(p1[0],p1[1]); ctx.lineTo(p1[0],p1[1]-h-2*z); ctx.stroke();
+}
+
+// ===================== Objects =====================
+function isoBox(sx,sy,w,h,top,left,right){
+  const a = w*hw(), b = w*hh();
+  poly([sx-a,sy-h, sx,sy+b-h, sx,sy+b, sx-a,sy], left);
+  poly([sx,sy+b-h, sx+a,sy-h, sx+a,sy, sx,sy+b], right);
+  poly([sx,sy-b-h, sx+a,sy-h, sx,sy+b-h, sx-a,sy-h], top);
+}
+function roof(sx,sy,w,h,rh,c1,c2){
+  const a = w*hw(), b = w*hh();
+  poly([sx-a,sy-h, sx,sy+b-h, sx,sy-h-rh], c1);
+  poly([sx,sy+b-h, sx+a,sy-h, sx,sy-h-rh], c2);
+  poly([sx-a,sy-h, sx,sy-b-h, sx,sy-h-rh], shade([0,0,0],0) ); // back faces hidden
+}
+function tree(sx,sy,z,k,v){
+  ell(sx, sy, 14*z, 6*z, "rgba(0,0,0,.18)");
+  const trunk = "#6e4a2a";
+  switch(k){
+    case 1: ctx.fillStyle=trunk; ctx.fillRect(sx-2.5*z, sy-22*z, 5*z, 22*z);
+      ell(sx, sy-34*z, 17*z, 15*z, "#3f7f2c"); ell(sx-9*z, sy-27*z, 10*z, 9*z, "#357026"); ell(sx+8*z, sy-28*z, 11*z, 9*z, "#4a8d33"); ell(sx-3*z, sy-40*z, 9*z, 7*z, "#5aa03d"); break;
+    case 2: ctx.fillStyle=trunk; ctx.fillRect(sx-2*z, sy-12*z, 4*z, 12*z);
+      for (let j=0;j<4;j++){ const yy = sy-12*z-j*11*z, ww=(15-j*3)*z; poly([sx-ww,yy, sx+ww,yy, sx,yy-16*z], j%2?"#2c6a3a":"#24583a"); } break;
+    case 3: ctx.strokeStyle=trunk; ctx.lineWidth=3*z; ctx.beginPath(); ctx.moveTo(sx,sy); ctx.lineTo(sx,sy-18*z); ctx.lineTo(sx-8*z,sy-28*z); ctx.moveTo(sx,sy-18*z); ctx.lineTo(sx+9*z,sy-29*z); ctx.stroke();
+      ell(sx, sy-31*z, 22*z, 6*z, "#6f8f32"); ell(sx-4*z, sy-33*z, 14*z, 4*z, "#86a63e"); break;
+    case 4: ctx.strokeStyle="#9a7a4c"; ctx.lineWidth=3.5*z; ctx.beginPath(); ctx.moveTo(sx,sy); ctx.quadraticCurveTo(sx+6*z,sy-20*z,sx+3*z,sy-40*z); ctx.stroke();
+      ctx.strokeStyle="#3f8f3a"; ctx.lineWidth=3*z; ctx.beginPath(); for(let j=0;j<6;j++){const a=j/6*Math.PI*2; ctx.moveTo(sx+3*z,sy-40*z); ctx.quadraticCurveTo(sx+3*z+Math.cos(a)*10*z, sy-46*z, sx+3*z+Math.cos(a)*16*z, sy-36*z+Math.abs(Math.sin(a))*4*z);} ctx.stroke(); break;
+    case 5: for(let j=0;j<6;j++){ const ox=(j-2.5)*3.2*z, hh2=(26+hash(v+j)*12)*z; ctx.strokeStyle=j%2?"#7fb342":"#6a9e34"; ctx.lineWidth=2.2*z; ctx.beginPath(); ctx.moveTo(sx+ox,sy); ctx.lineTo(sx+ox,sy-hh2); ctx.stroke(); ell(sx+ox+3*z,sy-hh2+3*z,5*z,2*z,"#8cc84b"); } break;
+    case 6: ctx.fillStyle="#4f9a4f"; const r=4*z; ctx.fillRect(sx-r,sy-30*z,2*r,30*z); ctx.fillRect(sx-11*z,sy-20*z,4*z,10*z); ctx.fillRect(sx-11*z,sy-14*z,8*z,4*z); ctx.fillRect(sx+7*z,sy-24*z,4*z,12*z); ctx.fillRect(sx+3*z,sy-16*z,8*z,4*z); ell(sx,sy-30*z,r,2*z,"#5fb05f"); break;
+    case 7: ell(sx, sy-6*z, 11*z, 8*z, "#3d7a2e"); ell(sx-4*z, sy-9*z, 6*z, 5*z, "#4f9238"); break;
+    case 8: ctx.fillStyle="#9b8b78"; ctx.fillRect(sx-3.5*z, sy-36*z, 7*z, 36*z); poly([sx-9*z,sy, sx+9*z,sy, sx,sy-12*z], "#8b7b68");
+      ell(sx, sy-46*z, 24*z, 13*z, "#2f6b2c"); ell(sx-10*z, sy-50*z, 13*z, 8*z, "#3b7f33"); ell(sx+10*z, sy-43*z, 13*z, 8*z, "#28602a"); break;
+    case 9: ell(sx, sy-5*z, 12*z, 8*z, "#8d8984"); ell(sx-3*z, sy-8*z, 7*z, 4*z, "#a9a59f"); break;
+    case 10: ctx.strokeStyle="#c7b45e"; ctx.lineWidth=1.5*z; ctx.beginPath(); for(let j=0;j<9;j++){const ox=(j-4)*2*z; ctx.moveTo(sx+ox,sy); ctx.lineTo(sx+ox*1.6,sy-(12+hash(v+j)*8)*z);} ctx.stroke(); break;
+    case 11: ctx.strokeStyle="#3c8f45"; ctx.lineWidth=2*z; ctx.beginPath(); for(let j=0;j<7;j++){const a=-Math.PI*(0.1+0.8*j/6); ctx.moveTo(sx,sy-3*z); ctx.quadraticCurveTo(sx+Math.cos(a)*8*z, sy-3*z+Math.sin(a)*14*z, sx+Math.cos(a)*14*z, sy-3*z+Math.sin(a)*7*z);} ctx.stroke(); break;
+    case 12: poly([sx-12*z,sy, sx-6*z,sy-12*z, sx+2*z,sy-15*z, sx+11*z,sy-4*z, sx+6*z,sy+2*z], "#dbeaf5", "rgba(120,160,200,.7)"); poly([sx-6*z,sy-12*z, sx+2*z,sy-15*z, sx,sy-6*z], "#f5fbff"); break;
+    case 13: ctx.fillStyle="#efefe8"; ctx.fillRect(sx-2*z, sy-26*z, 4*z, 26*z); ctx.fillStyle="#333"; for(let j=0;j<4;j++) ctx.fillRect(sx-2*z, sy-(5+j*6)*z, 4*z, 1.2*z);
+      ell(sx, sy-32*z, 12*z, 12*z, "#7fb043"); ell(sx+5*z, sy-27*z, 8*z, 7*z, "#94c24f"); break;
+  }
+}
+function building(sx,sy,z,k,i){
+  switch(k){
+    case 14: if (tint) { const c = TINTS[tint]; isoBox(sx,sy,0.7,14*z,shade(c,1),shade(c,.7),shade(c,.85)); break; } isoBox(sx,sy,0.7,14*z,"#a4774a","#7a5530","#8f6640"); { const a=0.7*hw(), b=0.7*hh(); poly([sx-a,sy-14*z, sx,sy+b-14*z, sx,sy-30*z], "#6b4a2a"); poly([sx,sy+b-14*z, sx+a,sy-14*z, sx,sy-30*z], "#8a6038"); } poly([sx+0.15*hw(), sy+0.45*hh(), sx+0.45*hw(), sy+0.15*hh(), sx+0.45*hw(), sy+0.15*hh()-9*z, sx+0.15*hw(), sy+0.45*hh()-9*z], "#2a1a0c"); break;
+    case 17: case 18: case 19: case 22: {
+      let col = {17:[[230,90,60],[255,240,220]],18:[[60,140,220],[230,245,255]],19:[[110,170,160],[240,240,230]],22:[[170,90,180],[255,230,120]]}[k];
+      if (tint) col = [TINTS[tint], TINTS[tint].map(v=>Math.min(255,v*0.6+100))];
+      const h = (k===22?22:16)*z;
+      isoBox(sx,sy,0.8,h, shade(col[1],1), shade(col[1],0.75), shade(col[1],0.88));
+      const a=0.85*hw(), b=0.85*hh();
+      for (let j=0;j<6;j++){ const f0=j/6,f1=(j+1)/6; poly([sx-a+(a)*f0*2*0.5, sy-h+(b)*f0, sx-a+(a)*f1*2*0.5, sy-h+b*f1, sx-a+a*f1+0, sy-h+b*f1-10*z, sx-a+a*f0, sy-h+b*f0-10*z], j%2?shade(col[0],1):"#fff"); }
+      poly([sx,sy+b-h, sx+a,sy-h, sx+a,sy-h-10*z, sx,sy+b-h-10*z], shade(col[0],.85));
+      poly([sx,sy-b-h-10*z, sx+a,sy-h-10*z, sx,sy+b-h-10*z, sx-a,sy-h-10*z], shade(col[0],1.1));
+      ctx.font = `${Math.max(8,14*z)|0}px sans-serif`; ctx.textAlign="center"; ctx.textBaseline="middle";
+      ctx.fillText({17:"🍔",18:"🥤",19:"🚻",22:"🎁"}[k], sx, sy-h-20*z);
+      break; }
+    case 20: ctx.fillStyle="#7a5230"; ctx.fillRect(sx-9*z,sy-3*z,2*z,5*z); ctx.fillRect(sx+7*z,sy-3*z,2*z,5*z); poly([sx-11*z,sy-4*z, sx+11*z,sy-4*z, sx+11*z,sy-7*z, sx-11*z,sy-7*z], "#a8713e"); poly([sx-11*z,sy-9*z, sx+11*z,sy-9*z, sx+11*z,sy-14*z, sx-11*z,sy-14*z], "#94623a"); break;
+    case 21: ell(sx,sy,5*z,2.5*z,"rgba(0,0,0,.2)"); ctx.fillStyle="#3f7a4a"; ctx.fillRect(sx-4.5*z,sy-13*z,9*z,13*z); ell(sx,sy-13*z,4.5*z,2*z,"#2d5a36"); break;
+    case 23: ctx.fillStyle="#666"; ctx.fillRect(sx-1*z,sy-10*z,2*z,10*z); isoBox(sx,sy-10*z,0.18,9*z,"#ffe27a","#c9a12c","#e0b93a"); break;
+    case 15: { const bb = Math.abs(Math.sin(time*2+i))*3*z; ell(sx,sy,6*z,2.5*z,"rgba(0,0,0,.2)"); ell(sx,sy-6*z-bb,6*z,6*z,"#e04a3a"); ctx.fillStyle="#ffd84a"; ctx.beginPath(); ctx.arc(sx,sy-6*z-bb,6*z,-Math.PI/2,Math.PI/2); ctx.fill(); break; }
+    case 16: isoBox(sx,sy,0.35,6*z,"#5aa0e0","#7d7d7d","#999"); break;
+    case 24: ell(sx,sy,15*z,7*z,"#6b4a2a"); for(let j=0;j<10;j++) ell(sx+(hash(i+j)-.5)*22*z, sy+(hash(i*3+j)-.5)*9*z-2*z, 2.5*z, 2.2*z, ["#ff5a7a","#ffd23a","#ffffff","#c15aff","#ff8a3a"][j%5]); break;
+    case 25: ell(sx,sy,18*z,9*z,"#a9a6a0"); ell(sx,sy-2*z,15*z,7*z,"#5ea6e0"); ctx.fillStyle="#bdb9b0"; ctx.fillRect(sx-2*z,sy-16*z,4*z,14*z);
+      for (let j=0;j<5;j++){ const ph=(time*1.2+j/5)%1; ell(sx+Math.cos(j*1.3)*ph*10*z, sy-16*z-Math.sin(ph*Math.PI)*12*z+ph*8*z, 1.5*z,1.5*z,"rgba(200,230,255,.85)"); } break;
+    case 26: ctx.fillStyle="#2f2f35"; ctx.fillRect(sx-1.2*z,sy-30*z,2.4*z,30*z); ell(sx,sy-32*z,4*z,4*z,"#fff2b0"); ell(sx,sy-32*z,8*z,8*z,"rgba(255,240,170,.25)"); break;
+    case 27: isoBox(sx,sy,0.5,40*z,"#d9c9a0","#a8946a","#c2ad80"); ctx.fillStyle="#5b3a1a"; ctx.fillRect(sx-0.5,sy-62*z,1.5*z,22*z);
+      poly([sx+1*z,sy-62*z, sx+16*z,sy-58*z+Math.sin(time*3)*2*z, sx+1*z,sy-53*z], "#2f8a3a"); break;
+  }
+}
+function drawObject(i, sx, sy){
+  const k = O[i], z = view.zoom;
+  if (k === 0) return;
+  if (k <= 13) tree(sx, sy, z, k, i); else building(sx, sy, z, k, i);
+}
+
+// ===================== Animals & people =====================
+const SP_DRAW = [
+  {c:"#d6a862",s:1},{c:"#f4f4f4",s:1},{c:"#e8c27a",s:1},{c:"#8e8c8a",s:1},{c:"#7a5232",s:1},{c:"#f4f4f0",s:1},
+  {c:"#222",s:1},{c:"#f5f1e2",s:1},{c:"#e88a2a",s:1},{c:"#3a3a3e",s:1},{c:"#c99a5c",s:1},{c:"#8e7280",s:1},
+];
+function drawAnimal(c, sp, x, y, s, flip, action, t, sel){
+  c.save(); c.translate(x,y); c.scale(flip*s, s);
+  const walk = action===1, rest = action===4;
+  const lp = walk ? Math.sin(t*10)*3 : 0;
+  const E = (ex,ey,rx,ry,col)=>{ c.beginPath(); c.ellipse(ex,ey,Math.abs(rx),Math.abs(ry),0,0,Math.PI*2); c.fillStyle=col; c.fill(); };
+  const R = (rx,ry,w,h,col)=>{ c.fillStyle=col; c.fillRect(rx,ry,w,h); };
+  const legs = (xs, top, len, w, col)=>{ if(rest) return; xs.forEach((lx,j)=>R(lx+(j%2?lp:-lp)*0.5, top, w, len, col)); };
+  E(0,0,16,4,"rgba(0,0,0,.22)");
+  if (rest) c.translate(0,5);
+  switch(sp){
+    case 0: // lion
+      legs([-9,-5,5,9],-9,9,3,"#b98a4a"); E(0,-12,12,6.5,"#d6a862"); c.strokeStyle="#c0904e"; c.lineWidth=2; c.beginPath(); c.moveTo(-11,-13); c.quadraticCurveTo(-18,-14,-17,-20); c.stroke();
+      E(12,-17,7,7,"#8a5226"); E(13,-17,4.5,4.5,"#e2b678"); E(15.5,-16,1.5,1,"#3a2010"); break;
+    case 1: // zebra
+      legs([-8,-5,5,8],-9,10,2.5,"#eee"); E(0,-13,11,6,"#f4f4f4"); c.save(); c.beginPath(); c.ellipse(0,-13,11,6,0,0,7); c.clip(); c.strokeStyle="#111"; c.lineWidth=1.6; for(let k=-10;k<12;k+=3.2){c.beginPath(); c.moveTo(k,-19); c.lineTo(k+2,-7); c.stroke();} c.restore();
+      c.strokeStyle="#f4f4f4"; c.lineWidth=4; c.beginPath(); c.moveTo(8,-15); c.lineTo(12,-23); c.stroke(); E(14,-23,4,2.6,"#f4f4f4"); E(17,-22.5,1.6,1.6,"#222"); R(9,-25,4,3,"#111"); break;
+    case 2: // giraffe
+      legs([-7,-4,4,7],-14,14,2.2,"#d8ad62"); E(0,-17,10,6,"#e8c27a"); c.strokeStyle="#e8c27a"; c.lineWidth=4.5; c.beginPath(); c.moveTo(6,-20); c.lineTo(12,-42); c.stroke();
+      E(14,-43,5,2.8,"#e8c27a"); R(12,-48,1,4,"#7a4a1a"); for(let k=0;k<9;k++) E(-7+((k*7)%15), -19+((k*5)%6), 2, 1.6, "#9a5a24"); for(let k=0;k<4;k++) E(8+k*1.3,-24-k*5,1.4,1.4,"#9a5a24"); break;
+    case 3: // elephant
+      legs([-10,-5,4,9],-10,10,5,"#7d7b79"); E(0,-17,15,10,"#8e8c8a"); E(13,-20,7,7,"#8e8c8a"); E(9,-19,5,8,"#7c7a78"); c.strokeStyle="#8e8c8a"; c.lineWidth=3.5; c.beginPath(); c.moveTo(18,-18); c.quadraticCurveTo(22,-10,19,-4); c.stroke(); R(17,-17,4,1.4,"#fffbe8"); break;
+    case 4: // grizzly
+      legs([-8,-4,4,8],-8,8,4,"#5d3d22"); E(0,-12,12,8,"#7a5232"); E(12,-14,6,5.5,"#7a5232"); E(12,-19,2,2,"#7a5232"); E(16.5,-13,2.5,2,"#4a3018"); break;
+    case 5: // panda
+      legs([-7,-3,3,7],-7,7,4,"#222"); E(0,-11,11,7.5,"#f4f4f0"); c.fillStyle="#222"; c.fillRect(-4,-18,5,14); E(11,-14,6,5.5,"#f4f4f0"); E(9,-19,2,2,"#222"); E(13,-19,2,2,"#222"); E(13,-14,1.6,1.4,"#222"); break;
+    case 6: // penguin
+      E(0,-9,5,8.5,"#222"); E(1.5,-8,3.3,6.5,"#fafafa"); E(0.5,-19,3.8,3.8,"#222"); E(2,-19,2,1.6,"#f3c04a"); poly2(c,[3.5,-19.5,7,-18.5,3.5,-18],"#e89a2a"); E(-1,-1,2,1,"#e89a2a"); E(2,-1,2,1,"#e89a2a"); break;
+    case 7: // polar bear
+      legs([-9,-5,5,9],-8,8,4,"#e2ddc8"); E(0,-12,13,8,"#f5f1e2"); E(13,-13,6,5,"#f5f1e2"); E(12,-17.5,1.8,1.8,"#f5f1e2"); E(18,-12.5,1.4,1.2,"#222"); break;
+    case 8: // tiger
+      legs([-8,-5,5,8],-8,8,3,"#d27a22"); E(0,-11,12,6,"#e88a2a"); E(0,-8,9,2.6,"#f5ede0"); c.save(); c.beginPath(); c.ellipse(0,-11,12,6,0,0,7); c.clip(); c.strokeStyle="#1a1210"; c.lineWidth=1.5; for(let k=-10;k<12;k+=3.5){c.beginPath(); c.moveTo(k,-17); c.lineTo(k+1.5,-9); c.stroke();} c.restore();
+      c.strokeStyle="#e88a2a"; c.lineWidth=2; c.beginPath(); c.moveTo(-11,-12); c.quadraticCurveTo(-18,-12,-18,-18); c.stroke(); E(12,-14,5.5,5,"#e88a2a"); E(13,-12,3,2,"#f5ede0"); break;
+    case 9: // gorilla
+      legs([-6,4],-8,8,5,"#2a2a2e"); E(0,-14,10,9,"#3a3a3e"); E(-1,-15,7,6,"#5a5a60"); E(8,-22,5.5,5.5,"#2e2e32"); E(9.5,-21,3,2.5,"#555"); c.strokeStyle="#2e2e32"; c.lineWidth=4; c.beginPath(); c.moveTo(6,-14); c.lineTo(10,-2); c.stroke(); break;
+    case 10: // camel
+      legs([-8,-5,5,8],-12,12,2.4,"#b88a4c"); E(0,-15,11,5.5,"#c99a5c"); E(-2,-20,5,4.5,"#c99a5c"); c.strokeStyle="#c99a5c"; c.lineWidth=3.5; c.beginPath(); c.moveTo(9,-15); c.quadraticCurveTo(15,-14,14,-26); c.stroke(); E(16,-26,4,2.5,"#c99a5c"); break;
+    case 11: // hippo
+      legs([-8,-4,4,8],-6,6,4.5,"#76606c"); E(0,-10,14,8,"#8e7280"); E(14,-11,7,6,"#8e7280"); E(15,-8,5,3,"#c48a96"); E(12,-16,1.5,1.5,"#8e7280"); break;
+    case 12: { // unicorn
+      legs([-8,-5,5,8],-10,10,2.6,"#eceef8"); E(0,-14,11,5.5,"#fafbff");
+      c.strokeStyle="#fafbff"; c.lineWidth=4.5; c.beginPath(); c.moveTo(8,-16); c.lineTo(12,-25); c.stroke(); E(14.5,-25,4.5,2.8,"#fafbff");
+      ["#ff7ac8","#8ab8ff","#ffe36a","#9dfc9d"].forEach((m,j)=>{ c.strokeStyle=m; c.lineWidth=1.6; c.beginPath(); c.moveTo(9.5-j*0.6,-26+j*2.2); c.quadraticCurveTo(5-j,-20+j*2,7-j*1.2,-15+j); c.stroke(); c.beginPath(); c.moveTo(-11,-15+j*1.2); c.quadraticCurveTo(-17,-12+j,-15,-5+j); c.stroke(); });
+      c.strokeStyle="#f3c43a"; c.lineWidth=1.8; c.beginPath(); c.moveTo(15,-27); c.lineTo(19,-35); c.stroke(); E(17,-24.5,1.2,1.2,"#334");
+      const tw = (Math.sin(t*4)+1)/2; E(19+tw*2,-36,1.2*tw+.3,1.2*tw+.3,"rgba(255,255,200,.9)"); break; }
+    case 13: { // triceratops
+      legs([-11,-6,5,10],-8,8,5,"#55753c"); E(0,-13,15,8,"#62874a"); c.strokeStyle="#62874a"; c.lineWidth=4; c.beginPath(); c.moveTo(-13,-12); c.quadraticCurveTo(-20,-10,-22,-5); c.stroke();
+      E(14,-17,6,9,"#7fa35a"); E(17,-13,6,4.5,"#62874a"); poly2(c,[21,-14,28,-15,21,-12],"#f2ecd8"); poly2(c,[15,-18,23,-23,16,-16],"#f2ecd8"); poly2(c,[13,-18,19,-25,14,-16],"#f2ecd8");
+      for(let k=0;k<4;k++) E(-8+k*5,-17+Math.abs(k-1.5),1.8,1.4,"#4f6e38"); E(18,-14.5,1,1,"#222"); break; }
+  }
+  c.restore();
+  if (sel){ c.strokeStyle="#ffe86a"; c.lineWidth=2; c.beginPath(); c.ellipse(x,y,18*s,7*s,0,0,7); c.stroke(); }
+}
+function poly2(c,p,col){ c.beginPath(); c.moveTo(p[0],p[1]); for(let i=2;i<p.length;i+=2)c.lineTo(p[i],p[i+1]); c.closePath(); c.fillStyle=col; c.fill(); }
+const SHIRTS = ["#e04a4a","#3b78dc","#f0c63c","#4ea85a","#c45ac8","#f08a32","#f2f2f2","#3cc0c0","#e6e632"];
+const TINTS = [null,[60,110,220],[130,85,45],[240,140,40],[245,130,190],[246,246,246],[245,220,60]];
+let tint = 0;
+const tintHex = () => { const c = TINTS[tint]; return `rgb(${c[0]},${c[1]},${c[2]})`; };
+const SKIN = ["#f0caa0","#c89670","#96643f","#6e4a30"];
+function drawPerson(kind, variant, x, y, s, walking, t, sel, flip){
+  const c = ctx; c.save(); c.translate(x,y); c.scale(s*flip,s);
+  const b = walking ? Math.abs(Math.sin(t*9))*1.2 : 0, lg = walking ? Math.sin(t*9)*2 : 0;
+  ell(0,0,5,2,"rgba(0,0,0,.25)");
+  const shirt = (tint && variant !== 8) ? tintHex() : kind===3 ? "#a08a4a" : kind===4 ? "#3c5a9a" : SHIRTS[variant%9];
+  c.fillStyle = kind===2 ? "#3a4670" : "#6a5a3a";
+  c.fillRect(-2.6+lg*0.3,-8-b,2.2,8+b*0.5); c.fillRect(0.4-lg*0.3,-8-b,2.2,8+b*0.5);
+  c.fillStyle = shirt; c.fillRect(-3.4,-16-b,6.8,8.5);
+  ell(0,-19-b,3,3,SKIN[variant%4]);
+  if (kind===3){ c.fillStyle="#7a6232"; c.fillRect(-4.5,-21.5-b,9,1.5); c.fillRect(-2.6,-24-b,5.2,3); }
+  if (kind===4){ c.fillStyle="#2a3a6a"; c.fillRect(-3.2,-22.5-b,6.4,2); }
+  c.restore();
+  if (sel){ c.strokeStyle="#ffe86a"; c.lineWidth=2; c.beginPath(); c.ellipse(x,y,8*s,3.5*s,0,0,7); c.stroke(); }
+}
+
+// ===================== Frame =====================
+let speed = 1, acc = 0, last = performance.now(), ents = null, nEnts = 0;
+let selected = null; // {kind:'ent',id} | {kind:'tile',x,y}
+let hover = null, drag = null;
+function frame(now){
+  const dt = Math.min(0.1, (now-last)/1000); last = now; time += dt;
+  if (walkMode) { walkFrame(dt); requestAnimationFrame(frame); return; }
+  acc += dt*speed;
+  let steps = 0; while (acc >= 0.05 && steps < 40) { acc -= 0.05; steps++; }
+  if (acc > 0.5) acc = 0;
+  if (steps) X.tick(steps);
+  views();
+  nEnts = X.entities(); ents = new Float32Array(X.memory.buffer, X.entities_ptr(), nEnts*10);
+  keyPan(dt);
+  draw();
+  uiTick(now);
+  requestAnimationFrame(frame);
+}
+function draw(){
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  const g = ctx.createLinearGradient(0,0,0,ch); g.addColorStop(0,"#2e4a20"); g.addColorStop(1,"#1d3013");
+  ctx.fillStyle = g; ctx.fillRect(0,0,cw,ch);
+  const a = hw(), b = hh(), margin = 80*view.zoom;
+  const selReg = selRegion();
+  // ground
+  for (const i of tileOrder) {
+    const [sx,sy] = proj(i%W+0.5, (i/W|0)+0.5);
+    if (sx < -a-margin || sx > cw+a+margin || sy < -b-margin || sy > ch+b+margin*2) continue;
+    drawTile(i, sx, sy);
+    if (DUNG[i]) for (let k=0;k<Math.min(DUNG[i],4);k++) ell(sx+(hash(i+k)-.5)*a*.8, sy+(hash(i*3+k)-.5)*b*.8, 3*view.zoom, 1.8*view.zoom, "#5a3a18");
+    if (LIT[i]) for (let k=0;k<LIT[i];k++) { ctx.fillStyle = k%2?"#fff":"#e45"; ctx.fillRect(sx+(hash(i*7+k)-.5)*a, sy+(hash(i*11+k)-.5)*b, 2.5*view.zoom, 2*view.zoom); }
+    if (selReg >= 0 && REG[i] === selReg) { ctx.beginPath(); ctx.moveTo(sx,sy-b); ctx.lineTo(sx+a,sy); ctx.lineTo(sx,sy+b); ctx.lineTo(sx-a,sy); ctx.closePath(); ctx.fillStyle="rgba(255,230,100,.16)"; ctx.fill(); }
+  }
+  drawLandOverlay();
+  if (showGrid()) { ctx.strokeStyle = "rgba(0,0,0,.12)"; ctx.lineWidth = 1; ctx.beginPath();
+    for (let k=0;k<=W;k++){ const p0=proj(k,0), p1=proj(k,H); ctx.moveTo(p0[0],p0[1]); ctx.lineTo(p1[0],p1[1]); const q0=proj(0,k), q1=proj(W,k); ctx.moveTo(q0[0],q0[1]); ctx.lineTo(q1[0],q1[1]); } ctx.stroke(); }
+  drawPreview();
+  // drawables
+  const list = [];
+  for (let i=0;i<W*H;i++) if (O[i]) { const x=i%W+0.5, y=(i/W|0)+0.5; list.push([depth(x,y), 0, i]); }
+  for (let y=0;y<=H;y++) for (let x=0;x<W;x++) { const v = FH[y*W+x]; if (v) list.push([depth(x+0.5,y)+0.01, 1, x, y, v]); }
+  for (let y=0;y<H;y++) for (let x=0;x<=W;x++) { const v = FV[y*(W+1)+x]; if (v) list.push([depth(x,y+0.5)+0.01, 2, x, y, v]); }
+  for (let k=0;k<nEnts;k++) list.push([depth(ents[k*10+2], ents[k*10+3]), 3, k]);
+  list.sort((p,q)=>p[0]-q[0]);
+  const selId = selected && selected.kind==='ent' ? selected.id : -1;
+  for (const d of list) {
+    if (d[1] === 0) { const i=d[2]; const [sx,sy] = proj(i%W+0.5,(i/W|0)+0.5); if (sx<-margin*1.5||sx>cw+margin*1.5||sy<-margin||sy>ch+margin*2) continue; drawObject(i,sx,sy); }
+    else if (d[1] === 1) drawEdge(d[2],d[3],d[2]+1,d[3],d[4]);
+    else if (d[1] === 2) drawEdge(d[2],d[3],d[2],d[3]+1,d[4]);
+    else {
+      const k = d[2]*10, kind = ents[k], [sx,sy] = proj(ents[k+2], ents[k+3]);
+      if (sx<-60||sx>cw+60||sy<-60||sy>ch+80) continue;
+      const flip = (ents[k+4]*faceMul()) >= 0 ? 1 : -1, id = ents[k+7];
+      if (kind === 1) {
+        drawAnimal(ctx, ents[k+1], sx, sy, view.zoom*ents[k+5]*0.95, flip, ents[k+6], time + id, id===selId);
+        if (ents[k+9] > 0) { ctx.font = `${14*view.zoom|0}px sans-serif`; ctx.textAlign="center"; ctx.fillText("❗", sx, sy-38*view.zoom); }
+      } else drawPerson(kind, ents[k+1], sx, sy, view.zoom*0.95, ents[k+6]>0, time+id, id===selId, flip);
+    }
+  }
+  drawBirds();
+}
+function drawBirds(){
+  if (birdsLeft <= 0) return;
+  let n = 0;
+  for (let k=0;k<nEnts && n<24;k++) {
+    if (ents[k*10] !== 2) continue; n++;
+    const [sx,sy] = proj(ents[k*10+2], ents[k*10+3]), ph = time*3 + k*1.7, z = view.zoom;
+    const bx = sx + Math.cos(ph)*14*z, by = sy - 30*z + Math.sin(ph*2)*6*z, f = Math.sin(time*18+k)*4*z;
+    ctx.strokeStyle = "#1c1c22"; ctx.lineWidth = 2*z; ctx.beginPath(); ctx.moveTo(bx-6*z, by-f); ctx.lineTo(bx, by); ctx.lineTo(bx+6*z, by-f); ctx.stroke();
+  }
+}
+function isOwned(x,y){ return x>=own[0] && x<own[2] && y>=own[1] && y<own[3]; }
+function drawLandOverlay(){
+  // Darken land that's for sale: whole world minus the owned rectangle (even-odd fill).
+  const w = [proj(0,0),proj(W,0),proj(W,H),proj(0,H)], o = [proj(own[0],own[1]),proj(own[2],own[1]),proj(own[2],own[3]),proj(own[0],own[3])];
+  ctx.beginPath(); ctx.moveTo(...w[0]); for (const q of w.slice(1)) ctx.lineTo(...q); ctx.closePath();
+  ctx.moveTo(...o[0]); for (const q of o.slice(1)) ctx.lineTo(...q); ctx.closePath();
+  ctx.fillStyle = "rgba(20,30,10,.42)"; ctx.fill("evenodd");
+  ctx.save(); ctx.setLineDash([10*view.zoom, 6*view.zoom]); ctx.strokeStyle = "rgba(255,224,120,.85)"; ctx.lineWidth = 2.5;
+  ctx.beginPath(); ctx.moveTo(...o[0]); for (const q of o.slice(1)) ctx.lineTo(...q); ctx.closePath(); ctx.stroke(); ctx.restore();
+  // little "for sale" signs along the boundary
+  if (view.zoom > 0.45) {
+    ctx.font = `bold ${Math.max(8, 10*view.zoom)|0}px Trebuchet MS, sans-serif`; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    const sign = (x,y) => { const [sx,sy] = proj(x,y); if (sx<-60||sx>cw+60||sy<-60||sy>ch+60) return; const z=view.zoom;
+      ctx.fillStyle="#6b4a22"; ctx.fillRect(sx-1.5*z, sy-22*z, 3*z, 22*z); ctx.fillStyle="#f6e7b0"; ctx.fillRect(sx-22*z, sy-34*z, 44*z, 14*z); ctx.strokeStyle="#6b4a22"; ctx.lineWidth=1.5; ctx.strokeRect(sx-22*z, sy-34*z, 44*z, 14*z); ctx.fillStyle="#9a2a10"; ctx.fillText("FOR SALE", sx, sy-27*z); };
+    for (let x = own[0]+4; x < own[2]; x += 16) if (own[1] > 0) sign(x+0.5, own[1]-1.5);
+    for (let y = own[1]+4; y < own[3]; y += 16) { if (own[0] > 0) sign(own[0]-1.5, y+0.5); if (own[2] < W) sign(own[2]+1.5, y+0.5); }
+  }
+}
+function selRegion(){
+  if (!selected) return -1;
+  if (selected.kind==='tile') { const i = selected.y*W+selected.x; const r = REG[i]; return r === X.outside_region() ? -1 : r; }
+  return -1;
+}
+function showGrid(){ return tool && ["fence","terrain","path","object","gate","bulldoze","animal"].includes(tool.type); }
+
+// ===================== Tools =====================
+let tool = { type: "select" };
+let brush = 1, fenceKind = 2, adoptMale = true;
+const CATS = [
+  { id:"select", icon:"👆", label:"Select" },
+  { id:"exhibit", icon:"🚧", label:"Fences" },
+  { id:"animals", icon:"🦁", label:"Animals" },
+  { id:"terrain", icon:"⛰️", label:"Terrain" },
+  { id:"foliage", icon:"🌳", label:"Foliage" },
+  { id:"items", icon:"🛖", label:"Animal Items" },
+  { id:"guest", icon:"🍔", label:"Buildings" },
+  { id:"scenery", icon:"🌷", label:"Scenery" },
+  { id:"path", icon:"🛤️", label:"Paths" },
+  { id:"staff", icon:"🧑‍🌾", label:"Staff" },
+  { id:"bulldoze", icon:"🚜", label:"Bulldoze" },
+  { id:"land", icon:"🗺️", label:"Buy Land" },
+  { id:"walk", icon:"🚶", label:"Zoo Walk" },
+  { id:"view", icon:"🔄", label:"Rotate" },
+];
+let cat = "select";
+function buildTools(){
+  const el = document.getElementById("tools"); el.innerHTML = "";
+  for (const c of CATS) {
+    const b = document.createElement("button"); b.className = "btn" + (c.id===cat?" on":""); b.dataset.cat = c.id;
+    b.innerHTML = `<span class="i">${c.icon}</span>${c.label}`;
+    b.onclick = () => pickCat(c.id);
+    el.appendChild(b);
+  }
+}
+function pickCat(id){
+  if (id === "walk") { enterWalk(); return; }
+  if (id === "view") { rotate(1); return; }
+  cat = id;
+  document.querySelectorAll("#tools .btn").forEach(b=>b.classList.toggle("on", b.dataset.cat===id));
+  const tray = document.getElementById("tray"), title = document.getElementById("trayTitle"), items = document.getElementById("trayItems");
+  items.innerHTML = ""; title.innerHTML = "";
+  if (id === "select") { tray.classList.remove("open"); tool = {type:"select"}; return; }
+  tray.classList.add("open");
+  const add = (label, cost, sub, draw, onpick, selKey) => {
+    const d = document.createElement("div"); d.className = "item"; d.dataset.key = selKey;
+    const c = document.createElement("canvas"); c.width = 172; c.height = 116; d.appendChild(c);
+    d.insertAdjacentHTML("beforeend", `<div>${label}</div>${cost!=null?`<div class="c">${money(cost)}</div>`:""}${sub?`<div class="b">${sub}</div>`:""}`);
+    const cx = c.getContext("2d"); cx.scale(2,2); draw(cx);
+    d.onclick = () => { onpick(); items.querySelectorAll(".item").forEach(e=>e.classList.toggle("sel", e===d)); };
+    items.appendChild(d); return d;
+  };
+  const objDraw = k => cx => { const sv = ctx; ctxSwap(cx, ()=>{ const z0=view.zoom; view.zoom = k>=17&&k<=22&&k!==20&&k!==21 ? 0.85 : (k<=13 && k!==7 && k!==9 && k!==10 && k!==11 ? 0.8 : 1.3); drawObjectAt(k, 43, k<=13?54:46); view.zoom=z0; }); };
+  if (id === "exhibit") {
+    title.innerHTML = `Drag a rectangle to build an exhibit. A gate is added automatically. <button class="btn" id="gateBtn">Gate tool</button>`;
+    for (let k=1;k<=3;k++) add(DEFS.fences[k].name, DEFS.fences[k].cost, "per segment · strength "+k, cx=>{ ctxSwap(cx,()=>{ const z0=view.zoom; view.zoom=1.4; const sv=proj; proj=(x,y)=>[18+ (x-y)*22, 40+(x+y)*11]; drawEdge(0,0,2,0,k); proj=sv; view.zoom=z0; }); }, ()=>{ fenceKind=k; tool={type:"fence"}; }, "f"+k);
+    document.getElementById("gateBtn").onclick = (e)=>{ e.stopPropagation(); tool={type:"gate"}; items.querySelectorAll(".item").forEach(e=>e.classList.remove("sel")); toast("Gate tool: tap a fence to add/remove a gate ($50)."); };
+    selectFirst();
+  } else if (id === "animals") {
+    title.innerHTML = `Adopt an animal and place it in an exhibit. <button class="btn ${adoptMale?'on':''}" id="sexM">♂ Male</button><button class="btn ${!adoptMale?'on':''}" id="sexF">♀ Female</button>`;
+    DEFS.species.forEach((s,i) => (s.hidden && !(unlockedSeen & (1<<i))) || add(s.name, s.cost, `${s.biome} · group ${s.group[0]}-${s.group[1]}`, cx=>drawAnimal(cx, i, 43, 50, i===3||i===13?1.1:(i===6?1.9:1.45), 1, 0, 0, false), ()=>{ tool={type:"animal", sp:i}; }, "a"+i));
+    const sm = document.getElementById("sexM"), sf = document.getElementById("sexF");
+    sm.onclick = ()=>{ adoptMale=true; sm.classList.add("on"); sf.classList.remove("on"); };
+    sf.onclick = ()=>{ adoptMale=false; sf.classList.add("on"); sm.classList.remove("on"); };
+    selectFirst();
+  } else if (id === "terrain") {
+    title.innerHTML = `Paint terrain. Brush: <button class="btn" data-b="0">S</button><button class="btn" data-b="1">M</button><button class="btn" data-b="2">L</button>`;
+    title.querySelectorAll("[data-b]").forEach(b=>{ b.classList.toggle("on", +b.dataset.b===brush); b.onclick=()=>{ brush=+b.dataset.b; title.querySelectorAll("[data-b]").forEach(x=>x.classList.toggle("on", x===b)); }; });
+    DEFS.terrain.forEach((t,i)=>{ if (i===7) return; add(t.name, t.cost, "per tile", cx=>{ const c=TCOL[i]; cx.fillStyle=`rgb(${c})`; cx.beginPath(); cx.moveTo(43,14); cx.lineTo(80,32); cx.lineTo(43,50); cx.lineTo(6,32); cx.closePath(); cx.fill(); cx.strokeStyle="rgba(0,0,0,.3)"; cx.stroke(); }, ()=>{ tool={type:"terrain", t:i}; }, "t"+i); });
+    selectFirst();
+  } else if (id === "path") {
+    title.textContent = "Drag to lay paths. Guests only walk on paths; exhibits must be beside a path to be seen.";
+    add("Concrete Path", DEFS.terrain[7].cost, "per tile", cx=>{ cx.fillStyle="rgb(208,198,180)"; cx.beginPath(); cx.moveTo(43,14); cx.lineTo(80,32); cx.lineTo(43,50); cx.lineTo(6,32); cx.closePath(); cx.fill(); }, ()=>{ tool={type:"path"}; }, "p");
+    selectFirst();
+  } else if (id === "foliage" || id === "items" || id === "guest" || id === "scenery") {
+    const want = {foliage:0, items:1, guest:2, scenery:3}[id];
+    title.textContent = {foliage:"Plant foliage. Each animal prefers plants from its own biome.", items:"Place inside exhibits: shelters, toys and water keep animals happy.", guest:"Guest facilities. Place them next to a path.", scenery:"Decorations make guests happier."}[id];
+    const BN = ["Temperate","Boreal","Savanna","Tropical","Desert","Bamboo","Tundra"];
+    DEFS.objects.forEach((o,k)=>{ if (o.cat !== want || k===0) return; const bio = BN.filter((_,j)=>o.biome & (1<<j)).join(", "); add(o.name, o.cost, bio || (want===0?"Any biome":""), objDraw(k), ()=>{ tool={type:"object", k}; }, "o"+k); });
+    selectFirst();
+  } else if (id === "staff") {
+    title.textContent = "Hire staff. Zookeepers feed animals and clean exhibits; maintenance workers pick up litter.";
+    add("Zookeeper", 500, "$300 / month", cx=>{ ctxSwap(cx,()=>drawPerson(3,1,43,52,2,false,0,false,1)); }, ()=>{ X.hire(3); refreshInfo(); }, "s3");
+    add("Maintenance Worker", 300, "$200 / month", cx=>{ ctxSwap(cx,()=>drawPerson(4,0,43,52,2,false,0,false,1)); }, ()=>{ X.hire(4); refreshInfo(); }, "s4");
+    tool = {type:"select"};
+  } else if (id === "land") {
+    const st = lastStats || J(X.stats());
+    title.innerHTML = `<span>Your zoo is <b>${own[2]-own[0]} × ${own[3]-own[1]}</b> tiles (the world is ${W} × ${H}). Buy 8-tile strips of the land for sale next to it.</span>`;
+    const dirs = [["North",0,"⬆"],["West",1,"⬅"],["East",2,"➡"]];
+    for (const [nm, d, arrow] of dirs) {
+      const c = st.expand[d];
+      const el = add("Expand " + nm, c >= 0 ? c : null, c >= 0 ? "+8 tiles" : "Fully expanded", cx => {
+        cx.fillStyle = "rgba(0,0,0,.25)"; cx.fillRect(18, 10, 50, 38); cx.fillStyle = "#7fb35a"; cx.fillRect(28, 20, 30, 24);
+        cx.fillStyle = "#ffe08a"; if (d===0) cx.fillRect(28, 12, 30, 7); if (d===1) cx.fillRect(20, 20, 7, 24); if (d===2) cx.fillRect(59, 20, 7, 24);
+        cx.font = "18px sans-serif"; cx.textAlign = "center"; cx.textBaseline = "middle"; cx.fillStyle = "#fff"; cx.fillText(arrow, 43, 32);
+      }, () => { if (c < 0) return; const r = X.expand(d); if (r > 0) { lastStats = J(X.stats()); own = lastStats.own; for (const m of lastStats.msgs) toast(m, "good"); pickCat("land"); } else { const s2 = J(X.stats()); for (const m of s2.msgs) toast(m); } }, "l"+d);
+      if (c < 0) el.style.opacity = .45;
+    }
+    tool = {type:"select"};
+  } else if (id === "bulldoze") {
+    title.textContent = "Tap objects, fences or paths to remove them (50% refund).";
+    tool = {type:"bulldoze"};
+  }
+}
+function selectFirst(){ const f = document.querySelector("#trayItems .item"); if (f) f.click(); }
+function ctxSwap(c, fn){ const old = ctx; ctx = c; try { fn(); } finally { ctx = old; } }
+function drawObjectAt(k, sx, sy){ const z = view.zoom; if (k <= 13) tree(sx, sy, z, k, 7); else building(sx, sy, z, k, 3); }
+
+// ===================== Input =====================
+const pointers = new Map();
+let pinch = null, panStart = null, lastTap = 0;
+function evTile(e){ const r = cv.getBoundingClientRect(); return unproj(e.clientX - r.left, e.clientY - r.top); }
+function inMap(x,y){ return x>=0&&y>=0&&x<W&&y<H; }
+cv.addEventListener("pointerdown", e => {
+  try { cv.setPointerCapture(e.pointerId); } catch (_) {}
+  pointers.set(e.pointerId, {x:e.clientX, y:e.clientY});
+  if (pointers.size === 2) { const [a,b] = [...pointers.values()]; pinch = { d: Math.hypot(a.x-b.x,a.y-b.y), z: view.zoom, mx:(a.x+b.x)/2, my:(a.y+b.y)/2, cx:view.cx, cy:view.cy }; drag = null; return; }
+  const [fx,fy] = evTile(e);
+  const panBtn = e.button === 1 || e.button === 2 || tool.type === "select" || e.shiftKey;
+  if (panBtn) { panStart = { x:e.clientX, y:e.clientY, cx:view.cx, cy:view.cy, moved:false, fx, fy }; return; }
+  drag = { sx: Math.floor(fx), sy: Math.floor(fy), fx, fy, cx: Math.floor(fx), cy: Math.floor(fy), painted: new Set() };
+  applyToolAt(fx, fy, true);
+});
+cv.addEventListener("pointermove", e => {
+  const p = pointers.get(e.pointerId); if (p) { p.x = e.clientX; p.y = e.clientY; }
+  const [fx,fy] = evTile(e); hover = {fx, fy, x:Math.floor(fx), y:Math.floor(fy), cx:e.clientX, cy:e.clientY};
+  if (pinch && pointers.size === 2) {
+    const [a,b] = [...pointers.values()]; const d = Math.hypot(a.x-b.x,a.y-b.y);
+    view.zoom = Math.max(0.22, Math.min(2.5, pinch.z * d / pinch.d));
+    const mx=(a.x+b.x)/2, my=(a.y+b.y)/2; panBy(mx - pinch.mx, my - pinch.my, pinch.cx, pinch.cy);
+    return;
+  }
+  if (panStart) {
+    const dx = e.clientX-panStart.x, dy = e.clientY-panStart.y;
+    if (Math.abs(dx)+Math.abs(dy) > 6) panStart.moved = true;
+    if (panStart.moved) panBy(dx, dy, panStart.cx, panStart.cy);
+    return;
+  }
+  if (drag) { drag.cx = Math.floor(fx); drag.cy = Math.floor(fy); drag.fx = fx; drag.fy = fy; applyToolAt(fx, fy, false); }
+  updateCursorTip();
+});
+function endPointer(e){
+  pointers.delete(e.pointerId);
+  if (pinch) { if (pointers.size < 2) { pinch = null; panStart = null; } return; }
+  if (panStart) { if (!panStart.moved && e.type === "pointerup") clickSelect(panStart.fx, panStart.fy); panStart = null; return; }
+  if (drag && e.type === "pointerup") {
+    if (tool.type === "fence") { const c = X.fence_rect(drag.sx, drag.sy, drag.cx, drag.cy, fenceKind, 0); if (c > 0) toast(`Exhibit built for ${money(c)}.`); else if (c === 0 && Math.abs(drag.sx-drag.cx)<1) toast("Drag out a rectangle at least 2×2 tiles."); }
+  }
+  drag = null;
+}
+cv.addEventListener("pointerup", endPointer); cv.addEventListener("pointercancel", endPointer);
+cv.addEventListener("contextmenu", e => e.preventDefault());
+cv.addEventListener("wheel", e => { e.preventDefault(); const r = cv.getBoundingClientRect(); const before = unproj(e.clientX-r.left, e.clientY-r.top); view.zoom = Math.max(0.22, Math.min(2.5, view.zoom * (e.deltaY < 0 ? 1.12 : 1/1.12))); const after = unproj(e.clientX-r.left, e.clientY-r.top); view.cx += before[0]-after[0]; view.cy += before[1]-after[1]; clampView(); }, {passive:false});
+function panBy(dx, dy, cx0, cy0){
+  // screen delta -> world delta (respecting rotation)
+  const a = -dx / hw(), b = -dy / hh(); const drx = (a+b)/2, dry = (b-a)/2;
+  let wx, wy; switch(view.rot){ case 0: wx=drx; wy=dry; break; case 1: wx=dry; wy=-drx; break; case 2: wx=-drx; wy=-dry; break; default: wx=-dry; wy=drx; }
+  view.cx = cx0 + wx; view.cy = cy0 + wy; clampView();
+}
+function clampView(){ view.cx = Math.max(-4, Math.min(W+4, view.cx)); view.cy = Math.max(-4, Math.min(H+4, view.cy)); }
+function rotate(d){ view.rot = (view.rot + d + 4) % 4; buildOrder(); }
+const keys = {};
+addEventListener("keydown", e => {
+  if (e.key === "`" || e.key === "~") { e.preventDefault(); toggleTerm(); return; }
+  if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return;
+  if (e.key === "$") { X.money_cheat(); return; }
+  keys[e.key.toLowerCase()] = true;
+  if (!walkMode) { if (e.key === "q" || e.key === "Q") rotate(-1); if (e.key === "e" || e.key === "E") rotate(1); if (e.key === "Escape") { pickCat("select"); closeInfo(); } if (e.key===" ") { setSpeed(speed?0:1); e.preventDefault(); } }
+  else if (e.key === "Escape") exitWalk();
+});
+addEventListener("keyup", e => { keys[e.key.toLowerCase()] = false; });
+function keyPan(dt){
+  let dx = 0, dy = 0; const s = 600*dt;
+  if (keys["arrowleft"]||keys["a"]) dx += s; if (keys["arrowright"]||keys["d"]) dx -= s;
+  if (keys["arrowup"]||keys["w"]) dy += s; if (keys["arrowdown"]||keys["s"]) dy -= s;
+  if (dx||dy) panBy(dx, dy, view.cx, view.cy);
+}
+
+function applyToolAt(fx, fy, first){
+  const x = Math.floor(fx), y = Math.floor(fy);
+  if (!inMap(x,y) && tool.type !== "fence") return;
+  const key = x+","+y;
+  switch (tool.type) {
+    case "terrain": if (!drag.painted.has(key)) { drag.painted.add(key); X.paint_terrain(x, y, tool.t, brush); } break;
+    case "path": if (!drag.painted.has(key)) { drag.painted.add(key); X.paint_terrain(x, y, 7, 0); } break;
+    case "object": if (!drag.painted.has(key)) { drag.painted.add(key); const r = X.place_object(x, y, tool.k); if (r === -2 && first) toast("Something is already there."); } break;
+    case "animal": if (first) { const r = X.adopt(x, y, tool.sp, adoptMale?1:0); if (r > 0) { selected = {kind:'ent', id:r}; refreshInfo(); } } break;
+    case "gate": if (first) X.toggle_gate(fx, fy); break;
+    case "bulldoze": if (!drag.painted.has(key) || first) { drag.painted.add(key); X.bulldoze(fx, fy); } break;
+  }
+}
+function clickSelect(fx, fy){
+  const id = X.pick(fx, fy);
+  if (id >= 0) { selected = {kind:'ent', id}; }
+  else if (inMap(fx,fy)) { selected = {kind:'tile', x:Math.floor(fx), y:Math.floor(fy), fx, fy}; }
+  else { selected = null; }
+  refreshInfo(true);
+}
+
+// Previews
+function diamond(x, y, fill, stroke){ const [sx,sy] = proj(x+0.5,y+0.5), a=hw(), b=hh(); ctx.beginPath(); ctx.moveTo(sx,sy-b); ctx.lineTo(sx+a,sy); ctx.lineTo(sx,sy+b); ctx.lineTo(sx-a,sy); ctx.closePath(); if(fill){ctx.fillStyle=fill;ctx.fill();} if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=2;ctx.stroke();} }
+function drawPreview(){
+  if (!hover || tool.type === "select") return;
+  const {x, y} = hover;
+  if (tool.type === "fence" && drag) {
+    const ax=Math.min(drag.sx,drag.cx), bx=Math.max(drag.sx,drag.cx), ay=Math.min(drag.sy,drag.cy), by=Math.max(drag.sy,drag.cy);
+    for (let yy=ay; yy<=by; yy++) for (let xx=ax; xx<=bx; xx++) if (inMap(xx,yy)) diamond(xx,yy,"rgba(255,230,120,.22)");
+    const p = [proj(ax,ay),proj(bx+1,ay),proj(bx+1,by+1),proj(ax,by+1)];
+    ctx.strokeStyle = "#ffe066"; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(...p[0]); for (const q of p.slice(1)) ctx.lineTo(...q); ctx.closePath(); ctx.stroke();
+    return;
+  }
+  if (!inMap(x,y)) return;
+  if (!isOwned(x,y)) { diamond(x,y,"rgba(255,80,60,.25)","rgba(255,120,90,.7)"); return; }
+  if (tool.type === "terrain") { const r = brush; for (let dy=-r;dy<=r;dy++) for (let dx=-r;dx<=r;dx++) if (r===0 || dx*dx+dy*dy <= r*r+r) if (inMap(x+dx,y+dy)) diamond(x+dx,y+dy,"rgba(255,255,255,.18)","rgba(255,255,255,.5)"); return; }
+  if (tool.type === "bulldoze") { diamond(x,y,"rgba(255,80,60,.3)","#ff6a4a"); return; }
+  if (tool.type === "object") { const ok = O[y*W+x]===0 && T[y*W+x]!==6; diamond(x,y, ok?"rgba(120,255,120,.25)":"rgba(255,80,60,.3)"); if (ok) { ctx.globalAlpha = .6; const [sx,sy]=proj(x+.5,y+.5); drawObjectAt(tool.k, sx, sy); ctx.globalAlpha = 1; } return; }
+  if (tool.type === "animal") { const ok = REG[y*W+x] !== X.outside_region(); diamond(x,y, ok?"rgba(120,255,120,.25)":"rgba(255,80,60,.3)"); return; }
+  diamond(x,y,"rgba(255,255,255,.2)","rgba(255,255,255,.6)");
+}
+let suitCache = {key:"", v:null};
+function updateCursorTip(){
+  const tip = document.getElementById("cursorTip");
+  if (!hover || matchMedia("(pointer:coarse)").matches) { tip.style.display="none"; return; }
+  let txt = "";
+  if (tool.type === "fence" && drag) { const c = X.fence_rect(drag.sx, drag.sy, drag.cx, drag.cy, fenceKind, 1); txt = `${Math.abs(drag.cx-drag.sx)+1} × ${Math.abs(drag.cy-drag.sy)+1} · ${money(c)}`; }
+  else if (tool.type === "animal" && inMap(hover.x,hover.y)) {
+    const k = hover.x+","+hover.y; if (suitCache.key !== k) { suitCache = {key:k, v:J(X.info_tile(hover.fx, hover.fy))}; }
+    const e = suitCache.v && suitCache.v.enclosure;
+    txt = e ? `${DEFS.species[tool.sp].name}: habitat suitability ${Math.round(e.suit[tool.sp]*100)}%` : "Place inside a fenced exhibit";
+  } else if (tool.type === "object") txt = `${DEFS.objects[tool.k].name} · ${money(DEFS.objects[tool.k].cost)}`;
+  else if (tool.type === "terrain") txt = DEFS.terrain[tool.t].name;
+  if (!txt) { tip.style.display = "none"; return; }
+  tip.textContent = txt; tip.style.display = "block"; tip.style.left = (hover.cx + 16) + "px"; tip.style.top = (hover.cy + 14) + "px";
+}
+
+// ===================== UI: top bar, info, toasts =====================
+let birdsLeft = 0, unlockedSeen = 0;
+let lastStats = null, statT = 0, infoT = 0, autosaveT = 0;
+function setSpeed(s){ speed = s; document.querySelectorAll("#speed .btn").forEach(b=>b.classList.toggle("on", +b.dataset.s===s)); }
+document.querySelectorAll("#speed .btn").forEach(b => b.onclick = () => setSpeed(+b.dataset.s));
+function stars(f){ return `<span style="position:relative;display:inline-block;color:rgba(0,0,0,.35)">★★★★★<span style="position:absolute;left:0;top:0;overflow:hidden;white-space:nowrap;color:#ffd54a;width:${f/5*100}%">★★★★★</span></span>`; }
+function uiTick(now){
+  if (now - statT > 250) {
+    statT = now;
+    const s = J(X.stats()); lastStats = s;
+    document.getElementById("cash").textContent = money(s.cash);
+    document.getElementById("cash").style.color = s.cash < 0 ? "#ff9a8a" : "";
+    document.getElementById("starsF").style.width = (s.fame/5*100)+"%"; document.getElementById("stFame").title = "Zoo fame: "+s.fame.toFixed(1)+" stars";
+    document.getElementById("guests").textContent = s.guests;
+    document.getElementById("animals").textContent = s.animals;
+    document.getElementById("date").textContent = s.date;
+    tint = s.tint; birdsLeft = s.birds;
+    if (s.own.join() !== own.join()) { own = s.own; if (cat === "land") pickCat("land"); }
+    if (s.unlocked !== unlockedSeen) { unlockedSeen = s.unlocked; if (cat === "animals") pickCat("animals"); }
+    for (const m of s.msgs) toast(m, /ALERT|escaped|broke/i.test(m) ? "alert" : /Goal complete|born|grant|Cheat/i.test(m) ? "good" : "");
+  }
+  if (now - infoT > 350) { infoT = now; refreshInfo(); }
+  if (now - autosaveT > 60000) { autosaveT = now; if (autosaveT > 61000) saveGame(true); }
+}
+function toast(m, cls){
+  const el = document.getElementById("toasts");
+  const d = document.createElement("div"); d.className = "toast " + (cls||""); d.textContent = m; el.appendChild(d);
+  while (el.children.length > 4) el.firstChild.remove();
+  setTimeout(()=>{ d.style.transition="opacity .5s"; d.style.opacity=0; setTimeout(()=>d.remove(),500); }, cls==="alert"?6000:3800);
+}
+function bar(label, v, inv){ v = Math.max(0, Math.min(1, v)); const c = v > .66 ? "#7ed957" : v > .33 ? "#f2c94c" : "#eb5757"; return `<div class="bar"><span>${label}</span><div class="track"><div class="fill" style="width:${v*100}%;background:${c}"></div></div></div>`; }
+function closeInfo(){ selected = null; document.getElementById("info").classList.remove("open"); }
+document.getElementById("close").onclick = closeInfo;
+function refreshInfo(force){
+  const box = document.getElementById("info"), body = document.getElementById("infoBody");
+  if (!selected) { box.classList.remove("open"); return; }
+  let d;
+  if (selected.kind === 'ent') d = J(X.info_entity(selected.id)); else d = J(X.info_tile(selected.fx, selected.fy));
+  if (!d) { closeInfo(); return; }
+  const scrollTop = box.scrollTop;
+  let h = "";
+  if (d.type === "animal") {
+    h += `<h3>${d.name} <span style="font-size:13px">${d.male?"♂":"♀"}</span></h3><div class="sub">${d.species} · ${d.adult?"Adult":"Baby"} · ${d.age.toFixed(0)} days old</div>`;
+    h += bar("Happiness", d.happy) + bar("Hunger", d.hunger) + bar("Thirst", d.thirst);
+    h += `<div style="margin-top:6px;font-size:12px;color:#ffe9a0;font-weight:bold">Habitat needs</div>`;
+    h += bar("Terrain", d.suit.terrain) + bar("Foliage", d.suit.foliage) + bar("Space", d.suit.space) + bar("Social", d.suit.social) + bar("Shelter", d.suit.shelter) + bar("Enrichment", d.suit.toys) + bar("Cleanliness", d.suit.clean) + bar("Water", d.suit.water) + (d.suit.safety<1?bar("Safety", d.suit.safety):"");
+    h += `<div class="tips">${d.tips.map(t=>`<div>• ${t}</div>`).join("")}</div>`;
+    h += `<div class="row">${d.escaped?`<button class="btn red" onclick="act(1)">Tranquilize & return ($400)</button>`:""}<button class="btn" onclick="act(0)">Send to conservation</button><button class="btn" onclick="walkFrom(${d.x},${d.y})">🚶 Walk here</button><button class="btn" onclick="centerOn(${d.x},${d.y})">Center</button></div>`;
+  } else if (d.type === "guest") {
+    h += `<h3>${esc(d.name||("Guest #"+d.id))} <button class="btn" style="padding:1px 6px;font-size:11px" onclick="renameSel()">✏️</button></h3><div class="sub">${d.sick?"🤢 feeling sick · ":""}Cash ${money(d.cash)} · spent ${money(d.spent)} · saw ${d.seen} species${d.leaving?" · heading home":""}</div>`;
+    h += bar("Happiness", d.happy) + bar("Hunger", d.hunger) + bar("Thirst", d.thirst) + bar("Restroom", d.bladder) + bar("Energy", d.energy) + bar("Fun", d.fun);
+    h += `<div style="margin-top:6px">${d.thoughts.length ? d.thoughts.map(t=>`<div class="thought">“${t}”</div>`).join("") : `<div class="thought">“What a lovely day for the zoo.”</div>`}</div>`;
+    h += `<div class="row"><button class="btn" onclick="walkFrom(${d.x},${d.y})">🚶 See through their eyes</button></div>`;
+  } else if (d.type === "staff") {
+    h += `<h3>${esc(d.name||d.role)} <button class="btn" style="padding:1px 6px;font-size:11px" onclick="renameSel()">✏️</button></h3><div class="sub">${d.role} · ${d.task} · ${d.free?"works for free 😇":money(d.salary)+"/month"}</div><div class="row"><button class="btn red" onclick="act(2)">Fire</button><button class="btn" onclick="centerOn(${d.x},${d.y})">Center</button></div>`;
+  } else if (d.type === "tile") {
+    const e = d.enclosure;
+    if (e) {
+      const names = e.species.map(s=>`${s[1]} ${s[1]>1?DEFS.species[s[0]].plural:DEFS.species[s[0]].name}`);
+      h += `<h3>${e.name ? esc(e.name) : (names.length ? (e.species.length===1 ? DEFS.species[e.species[0][0]].name : "Mixed") : "Empty") + " Exhibit"} <button class="btn" style="padding:1px 6px;font-size:11px" onclick="renameSel()">✏️</button></h3><div class="sub">${e.area} tiles · ${e.fence} · ${e.gates} gate${e.gates===1?"":"s"}${e.water?" · has water":" · <b style='color:#ffb39a'>no water</b>"}</div>`;
+      if (names.length) h += `<div style="font-size:12px;margin-bottom:4px">${names.join(", ")}</div>` + bar("Avg. happiness", e.happy) + bar("Food stock", Math.min(1, e.food/(e.animals*6+4))) + bar("Cleanliness", 1 - Math.min(1, e.dung/(e.area*0.12)));
+      h += `<div style="margin-top:6px;font-size:12px;color:#ffe9a0;font-weight:bold">Terrain mix</div><div>`;
+      e.terrain.forEach((v,i)=>{ if (v>0.005) h += `<span class="chip" style="border-left:8px solid rgb(${TCOL[i]})">${DEFS.terrain[i].name} ${Math.round(v*100)}%</span>`; });
+      h += `</div><div style="margin-top:6px;font-size:12px;color:#ffe9a0;font-weight:bold">Best suited for</div><div>`;
+      e.suit.map((v,i)=>[v,i]).sort((a,b)=>b[0]-a[0]).slice(0,4).forEach(([v,i])=>{ h += `<span class="chip">${DEFS.species[i].name} ${Math.round(v*100)}%</span>`; });
+      h += `</div>`;
+      if (!e.gates) h += `<div class="tips">⚠ No gate. Use the Gate tool so keepers can get in.</div>`;
+      h += `<div class="row"><button class="btn" onclick="walkFrom(${d.x+0.5},${d.y+0.5})">🚶 Walk here</button></div>`;
+    } else {
+      if (!d.owned) h += `<div class="tips">🪧 This land is for sale. Buy it with <b>🗺️ Buy Land</b>.</div><div class="row"><button class="btn" onclick="closeInfo();pickCat('land')">🗺️ Buy Land</button></div>`;
+      h += `<h3>${d.object !== "None" ? d.object : d.terrain}</h3><div class="sub">${d.terrain}${d.litter?` · litter ×${d.litter}`:""}</div>`;
+      if (d.objId === 23) h += `<div class="tips">Guests donate here after seeing nearby happy animals.</div>`;
+      h += `<div class="row"><button class="btn" onclick="walkFrom(${d.x+0.5},${d.y+0.5})">🚶 Walk here</button></div>`;
+    }
+  }
+  if (body.dataset.h !== h || force) { body.innerHTML = h; body.dataset.h = h; }
+  box.classList.add("open"); if (!force) box.scrollTop = scrollTop;
+}
+function esc(t){ return String(t).replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+window.renameSel = () => {
+  if (!selected) return;
+  let cur = "", what = "";
+  if (selected.kind === 'ent') { const d = J(X.info_entity(selected.id)); if (!d) return; cur = d.name || ""; what = d.type === "guest" ? "guest" : "staff member"; }
+  else { const d = J(X.info_tile(selected.fx, selected.fy)); if (!d || !d.enclosure) return; cur = d.enclosure.name || ""; what = "exhibit"; selected.etile = d.enclosure.tile; }
+  modal(`<h2>Rename ${what}</h2><input id="rnI" maxlength="32" value="${esc(cur)}" style="width:100%;font-size:16px;padding:6px;border-radius:6px;border:2px solid #8a6a22"><div style="font-size:12px;color:#d7ecc2;margin-top:6px">Psst... some names are special. Type <b>cheats</b> in the terminal (&gt;_) for the list.</div><div class="row"><button class="btn" onclick="doRename()">Rename</button><button class="btn" onclick="closeModal()">Cancel</button></div>`);
+  const i = document.getElementById("rnI"); i.focus(); i.select(); i.onkeydown = e => { if (e.key === "Enter") doRename(); };
+};
+window.doRename = () => {
+  const v = document.getElementById("rnI").value; putStr(v);
+  const r = selected.kind === 'ent' ? outStr(X.rename_person(selected.id)) : outStr(X.rename_exhibit(selected.etile));
+  closeModal(); if (!/^Cheat/.test(r)) toast(r); refreshInfo(true);
+};
+window.act = (mode) => { if (selected && selected.kind==='ent') { X.remove_entity(selected.id, mode); if (mode !== 1) closeInfo(); } };
+window.centerOn = (x,y) => { view.cx = x; view.cy = y; };
+
+// ===================== Modals: menu, finances, goals, status =====================
+function modal(html){ const m = document.getElementById("modal"); document.getElementById("modalBox").innerHTML = html; m.classList.add("open"); }
+document.getElementById("modal").addEventListener("click", e => { if (e.target.id === "modal") e.currentTarget.classList.remove("open"); });
+const SIZE_BTNS = '<div class="row"><button class="btn" onclick="newZoo(0)">🌱 Small<br><small>56 × 56</small></button><button class="btn" onclick="newZoo(1)">🌳 Medium<br><small>80 × 80</small></button><button class="btn" onclick="newZoo(2)">🏞️ Large<br><small>112 × 112</small></button></div><div style="font-size:12px;color:#d7ecc2;margin-top:6px">You can buy more land later with 🗺️ Buy Land, up to 128 × 128.</div>';
+window.confirmNew = () => modal('<h2>Start a new zoo?</h2><p>Your current zoo will be replaced. Save or export it first if you want to keep it. Pick a size:</p>' + SIZE_BTNS + '<div class="row"><button class="btn" onclick="closeModal()">Cancel</button></div>');
+window.newZoo = (size) => { X.new_zoo((Math.random()*1e9)|0, size||0); closeModal(); selected=null; lastStats = J(X.stats()); own = lastStats.own; homeView(); view.zoom = size===2 ? 0.7 : size===1 ? 0.85 : view.zoom; try{localStorage.removeItem('wildwood_save')}catch(e){} };
+window.closeModal = () => document.getElementById("modal").classList.remove("open");
+document.getElementById("menuBtn").onclick = () => modal(`<h2>Wildwood Zoo</h2>
+  <div class="row" style="flex-direction:column;align-items:stretch">
+  <button class="btn" onclick="closeModal();showStatus()">📊 Zoo Status</button>
+  <button class="btn" onclick="closeModal();showFinances()">💰 Finances & Admission</button>
+  <button class="btn" onclick="closeModal();showGoals()">🏆 Goals</button>
+  <button class="btn" onclick="saveGame()">💾 Save Zoo</button>
+  <button class="btn" onclick="loadGame()">📂 Load Zoo</button>
+  <button class="btn" onclick="exportSave()">⬇ Export save code</button>
+  <button class="btn" onclick="importSave()">⬆ Import save code</button>
+  <button class="btn" onclick="closeModal();toggleTerm(true)">💻 Terminal &amp; Cheats</button>
+  <button class="btn" onclick="closeModal();showHelp()">❓ How to Play</button>
+  <button class="btn red" onclick="confirmNew()">🌱 New Zoo</button>
+  </div>`);
+document.getElementById("stCash").onclick = () => showFinances();
+document.getElementById("stFame").onclick = () => showStatus();
+document.getElementById("stGuests").onclick = () => showStatus();
+document.getElementById("stAnimals").onclick = () => showStatus();
+document.getElementById("stDate").onclick = () => showGoals();
+function showFinances(){
+  const s = J(X.stats()); for (const m of s.msgs) toast(m);
+  const rows = ["Admissions","Concessions","Donations","Gift shop","Salaries","Upkeep","Construction","Animals"];
+  let t = `<table class="led"><tr><td></td><td class="n"><b>This month</b></td><td class="n"><b>Last month</b></td></tr>`;
+  rows.forEach((r,i)=>{ const neg = i>=4; t += `<tr><td>${r}</td><td class="n" style="color:${neg?'#ffb39a':'#c8f5a8'}">${neg?'-':''}${money(s.cur[i])}</td><td class="n" style="color:${neg?'#ffb39a':'#c8f5a8'}">${neg?'-':''}${money(s.ledger[i])}</td></tr>`; });
+  const inc = a => a[0]+a[1]+a[2]+a[3]-a[4]-a[5]-a[6]-a[7];
+  t += `<tr><td><b>Profit</b></td><td class="n"><b>${money(inc(s.cur))}</b></td><td class="n"><b>${money(inc(s.ledger))}</b></td></tr></table>`;
+  modal(`<h2>Finances</h2><div class="kv"><span>Bank balance</span><b>${money(s.cash)}</b></div>${t}
+    <div style="margin-top:12px"><b>Admission price: <span id="admV">${money(s.admission)}</span></b><input type="range" min="0" max="80" step="1" value="${s.admission}" oninput="X.set_admission(+this.value);document.getElementById('admV').textContent=money(+this.value)">
+    <div style="font-size:12px;color:#d7ecc2">Higher fame lets you charge more. Guests think about ${money(12+s.fame*8)} is fair right now.</div></div>
+    <div class="row"><button class="btn" onclick="closeModal()">Close</button></div>`);
+}
+function showStatus(){
+  const s = lastStats || J(X.stats());
+  modal(`<h2>Zoo Status</h2><div style="font-size:26px;color:#ffd54a">${stars(s.fame)}</div><div class="kv"><span>Zoo fame</span><b>${s.fame.toFixed(2)} / 5</b></div>
+   ${bar("Guest happiness", s.guestH)}${bar("Animal happiness", s.animalH)}${bar("Species variety", s.variety)}
+   <div class="kv"><span>Guests in zoo</span><b>${s.guests}</b></div><div class="kv"><span>Total visitors</span><b>${s.visitors}</b></div>
+   <div class="kv"><span>Animals</span><b>${s.animals} (${s.species} species)</b></div><div class="kv"><span>Zookeepers</span><b>${s.keepers}</b></div><div class="kv"><span>Maintenance workers</span><b>${s.maint}</b></div>
+   <div class="tips">Fame rises with happy animals, happy guests and more species. More fame brings more guests.</div><div class="row"><button class="btn" onclick="closeModal()">Close</button></div>`);
+}
+function showGoals(){
+  const s = lastStats || J(X.stats());
+  modal(`<h2>Goals</h2>${DEFS.goals.map((g,i)=>`<div class="goal ${s.goals&(1<<i)?'done':''}"><div class="ck">${s.goals&(1<<i)?'✓':''}</div><div style="flex:1">${g.name}</div><div>${g.reward?money(g.reward):'🏆'}</div></div>`).join("")}<div class="row"><button class="btn" onclick="closeModal()">Close</button></div>`);
+}
+function showHelp(first){
+  modal(`<h2>Welcome to Wildwood Zoo!</h2>${first ? '<p style="margin:4px 0"><b>Choose your starting zoo size</b> (or just close this to start Small):</p>' + SIZE_BTNS + '<hr style="border-color:rgba(255,255,255,.15)">' : ""}
+  <div style="font-size:13.5px;line-height:1.5">
+  <p><b>1. Build an exhibit.</b> Open <b>🚧 Fences</b> and drag a rectangle beside the path. A gate is added automatically. Bigger animals need stronger fences.</p>
+  <p><b>2. Make it feel like home.</b> Every species has a native biome. Paint its <b>⛰️ Terrain</b>, plant its <b>🌳 Foliage</b>, and add a shelter, a toy and water from <b>🛖 Animal Items</b>. When you place an animal, the suitability % shows how well the exhibit fits it.</p>
+  <p><b>3. Adopt animals</b> in groups of the right size, males and females, and they may have babies.</p>
+  <p><b>4. Hire zookeepers</b> to feed animals and clean up dung. Unhappy animals, or animals that are too strong for their fence, will <b>break out</b>!</p>
+  <p><b>5. Keep guests happy</b> with food and drink stands, restrooms, benches, trash cans and scenery beside paths. Put donation boxes near great exhibits.</p>
+  <p><b>6. 🚶 Zoo Walk</b> lets you explore your zoo on foot in first person.</p>
+  <p><b>7. 🗺️ Buy Land</b> when you run out of room. The darker land with FOR SALE signs can be bought in 8-tile strips.</p>
+  <p><b>8. &gt;_ Terminal</b> (or the ~ key) opens the command console. Old-school players know some names are special, and Shift+$ still works...</p>
+  <p style="color:#d7ecc2">Controls: drag with <b>Select</b> to pan · pinch or scroll to zoom · two fingers to pan while building · Q/E or 🔄 to rotate · space to pause.</p>
+  </div><div class="row"><button class="btn" onclick="closeModal()">Let's build!</button></div>`);
+}
+
+// ===================== Save / Load =====================
+function b64(u8){ let s=""; for (let i=0;i<u8.length;i+=0x8000) s += String.fromCharCode.apply(null, u8.subarray(i,i+0x8000)); return btoa(s); }
+function saveData(){ const n = X.save(); return b64(new Uint8Array(X.memory.buffer, X.out_ptr(), n).slice()); }
+function loadFrom(s, quiet){
+  try { const bin = Uint8Array.from(atob(s.trim()), c=>c.charCodeAt(0)); const p = X.alloc_in(bin.length); new Uint8Array(X.memory.buffer, p, bin.length).set(bin); const r = X.load(); if (r !== 1) { if(!quiet) toast("That save could not be loaded.", "alert"); return false; } selected = null; lastStats = J(X.stats()); own = lastStats.own; homeView(); for (const m of lastStats.msgs) toast(m); return true; }
+  catch(e){ if(!quiet) toast("That save could not be loaded.", "alert"); return false; }
+}
+window.saveGame = (auto) => { try { localStorage.setItem("wildwood_save", saveData()); if (!auto) { toast("Zoo saved."); closeModal(); } } catch(e){ if (!auto) toast("Saving isn't available here. Use Export save code instead.", "alert"); } };
+window.loadGame = () => { try { const s = localStorage.getItem("wildwood_save"); if (!s) { toast("No saved zoo found."); return; } if (loadFrom(s)) closeModal(); } catch(e){ toast("Loading isn't available here. Use Import save code.", "alert"); } };
+window.exportSave = () => modal(`<h2>Save code</h2><div style="font-size:12px;margin-bottom:6px">Copy this text somewhere safe. Import it later to restore your zoo.</div><textarea id="sc" style="width:100%;height:160px;font-size:10px" readonly>${saveData()}</textarea><div class="row"><button class="btn" onclick="const t=document.getElementById('sc');t.select();try{navigator.clipboard.writeText(t.value).then(()=>toast('Copied!'),()=>toast('Select the text and copy it manually.'))}catch(e){toast('Select the text and copy it manually.')}">Copy</button><button class="btn" onclick="closeModal()">Close</button></div>`);
+window.importSave = () => modal(`<h2>Import save code</h2><textarea id="ic" style="width:100%;height:160px;font-size:10px"></textarea><div class="row"><button class="btn" onclick="if(loadFrom(document.getElementById('ic').value))closeModal()">Load</button><button class="btn" onclick="closeModal()">Cancel</button></div>`);
+
+// ===================== Zoo Walk =====================
+let walkMode = false, wimg = null;
+const wc = document.getElementById("walkCanvas"), wctx = wc.getContext("2d");
+const dkeys = {};
+function enterWalk(x, y){
+  if (x === undefined) { // from camera center: nearest path tile
+    let best = null, bd = 1e9;
+    for (let i=0;i<W*H;i++) if (T[i]===7) { const d = (i%W+.5-view.cx)**2 + ((i/W|0)+.5-view.cy)**2; if (d<bd){bd=d;best=i;} }
+    x = best!==null ? best%W+0.5 : W/2; y = best!==null ? (best/W|0)+0.5 : H-2;
+  }
+  const v = [[-1,-1],[-1,1],[1,1],[1,-1]][view.rot]; // screen-up direction in world space
+  X.walk_set(x, y, Math.atan2(v[1], v[0]));
+  walkMode = true; sizeWalk();
+  document.getElementById("walkWrap").classList.add("open");
+  document.getElementById("tray").classList.remove("open");
+}
+function sizeWalk(){
+  // Render at the screen's own shape: ~400 px wide in landscape, ~300 px wide in portrait.
+  const ar = innerHeight / innerWidth, w = ar > 1 ? 300 : 400, h = Math.round(Math.min(720, Math.max(120, w * ar)));
+  X.walk_resize(w, h); wc.width = X.walk_w(); wc.height = X.walk_h(); wimg = wctx.createImageData(wc.width, wc.height);
+}
+addEventListener("resize", () => { if (walkMode) sizeWalk(); });
+window.walkFrom = (x,y) => { closeInfo(); enterWalk(x,y); };
+function exitWalk(){ walkMode = false; document.getElementById("walkWrap").classList.remove("open"); view.cx = X.walk_x(); view.cy = X.walk_y(); pickCat(cat); }
+document.getElementById("walkExit").onclick = exitWalk;
+document.querySelectorAll("#dpad .btn").forEach(b => {
+  const k = b.dataset.k;
+  b.addEventListener("pointerdown", e => { e.preventDefault(); dkeys[k] = true; });
+  for (const ev of ["pointerup","pointerleave","pointercancel"]) b.addEventListener(ev, () => { dkeys[k] = false; });
+});
+let look = null;
+wc.addEventListener("pointerdown", e => { look = {x:e.clientX}; try { wc.setPointerCapture(e.pointerId); } catch (_) {} });
+wc.addEventListener("pointermove", e => { if (look) { const dx = e.clientX - look.x; look.x = e.clientX; X.walk_move(0,0, dx*0.006/2.2, 1); } });
+wc.addEventListener("pointerup", () => look = null);
+function walkFrame(dt){
+  acc += dt*speed; let steps = 0; while (acc >= 0.05 && steps < 40) { acc -= 0.05; steps++; } if (steps) X.tick(steps);
+  let f = 0, s = 0, t = 0;
+  if (keys["w"]||keys["arrowup"]||dkeys.f) f += 1; if (keys["s"]||keys["arrowdown"]||dkeys.b) f -= 1;
+  if (keys["a"]) s -= 1; if (keys["d"]) s += 1;
+  if (keys["arrowleft"]||keys["q"]||dkeys.l) t -= 1; if (keys["arrowright"]||keys["e"]||dkeys.r) t += 1;
+  if (keys["shift"]) f *= 2.2;
+  X.walk_move(f, s, t, dt);
+  const ptr = X.walk_render(dt);
+  wimg.data.set(new Uint8ClampedArray(X.memory.buffer, ptr, wc.width*wc.height*4));
+  wctx.putImageData(wimg, 0, 0);
+  // keep aspect: cover
+  const ar = wc.width / wc.height, sr = innerWidth / innerHeight;
+  if (sr > ar) { wc.style.width = "100%"; wc.style.height = (innerWidth/ar)+"px"; wc.style.top = ((innerHeight - innerWidth/ar)/2)+"px"; wc.style.left="0"; }
+  else { wc.style.height = "100%"; wc.style.width = (innerHeight*ar)+"px"; wc.style.left = ((innerWidth - innerHeight*ar)/2)+"px"; wc.style.top="0"; }
+  uiTick(performance.now());
+}
+
+// ===================== Terminal =====================
+const term = document.getElementById("term"), termOut = document.getElementById("termOut"), termIn = document.getElementById("termIn");
+const termHist = []; let termHi = 0, termGreeted = false;
+function termPrint(t, cls){ const d = document.createElement("div"); if (cls) d.className = cls; d.textContent = t; termOut.appendChild(d); termOut.scrollTop = termOut.scrollHeight; }
+function toggleTerm(force){
+  const open = force !== undefined ? force : !term.classList.contains("open");
+  term.classList.toggle("open", open);
+  if (open) {
+    if (!termGreeted) { termGreeted = true; termPrint("WILDWOOD ZOO SYSTEMS  ·  (c) 2004 Wildwood Software\nType 'help' for commands or 'cheats' for the secret names.\n", "w"); }
+    setTimeout(()=>termIn.focus(), 30);
+  } else termIn.blur();
+}
+window.toggleTerm = toggleTerm;
+document.getElementById("termBtn").onclick = () => toggleTerm();
+document.getElementById("termClose").onclick = () => toggleTerm(false);
+termIn.addEventListener("keydown", e => {
+  e.stopPropagation();
+  if (e.key === "`" || e.key === "~") { e.preventDefault(); toggleTerm(false); return; }
+  if (e.key === "ArrowUp") { if (termHi > 0) termIn.value = termHist[--termHi]; e.preventDefault(); return; }
+  if (e.key === "ArrowDown") { if (termHi < termHist.length) { termHi++; termIn.value = termHist[termHi] || ""; } e.preventDefault(); return; }
+  if (e.key === "Escape") { toggleTerm(false); return; }
+  if (e.key !== "Enter") return;
+  const line = termIn.value; termIn.value = "";
+  if (!line.trim()) return;
+  termHist.push(line); termHi = termHist.length;
+  termPrint("> " + line, "u");
+  const c = line.trim().toLowerCase();
+  if (c === "clear" || c === "cls") { termOut.innerHTML = ""; return; }
+  if (c === "exit" || c === "quit") { toggleTerm(false); return; }
+  putStr(line);
+  let selE = -1, selT = -1;
+  if (selected && selected.kind === 'ent') selE = selected.id;
+  if (selected && selected.kind === 'tile') selT = selected.y*W + selected.x;
+  const out = outStr(X.terminal(selE, selT));
+  termPrint(out + "\n", /^Cheat activated/m.test(out) ? "w" : "");
+  refreshInfo(true);
+});
+
+buildOrder();
+boot().catch(e => { document.getElementById("loading").textContent = "Failed to start: " + e; });
+</script>
+</body>
+</html>
